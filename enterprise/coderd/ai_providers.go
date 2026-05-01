@@ -210,6 +210,8 @@ func (api *API) aiProvidersCreate(rw http.ResponseWriter, r *http.Request) {
 	}
 	aReq.New = row
 
+	publishAIProvidersChanged(ctx, api.Pubsub, api.AGPL.Logger)
+
 	sdk, err := dbAIProviderToSDK(row)
 	if err != nil {
 		httpapi.Write(ctx, rw, http.StatusInternalServerError, codersdk.Response{
@@ -308,6 +310,8 @@ func (api *API) aiProvidersUpdate(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	publishAIProvidersChanged(ctx, api.Pubsub, api.AGPL.Logger)
+
 	sdk, err := dbAIProviderToSDK(updated)
 	if err != nil {
 		httpapi.Write(ctx, rw, http.StatusInternalServerError, codersdk.Response{
@@ -364,6 +368,8 @@ func (api *API) aiProvidersDelete(rw http.ResponseWriter, r *http.Request) {
 		})
 		return
 	}
+
+	publishAIProvidersChanged(ctx, api.Pubsub, api.AGPL.Logger)
 
 	rw.WriteHeader(http.StatusNoContent)
 }
@@ -443,6 +449,8 @@ func (api *API) aiProviderKeysCreate(rw http.ResponseWriter, r *http.Request) {
 	}
 	aReq.New = row
 
+	publishAIProvidersChanged(ctx, api.Pubsub, api.AGPL.Logger)
+
 	httpapi.Write(ctx, rw, http.StatusCreated, dbAIProviderKeyToSDK(row))
 }
 
@@ -517,6 +525,8 @@ func (api *API) aiProviderKeysDelete(rw http.ResponseWriter, r *http.Request) {
 		})
 		return
 	}
+
+	publishAIProvidersChanged(ctx, api.Pubsub, api.AGPL.Logger)
 
 	rw.WriteHeader(http.StatusNoContent)
 }
