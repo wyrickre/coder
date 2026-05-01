@@ -1,5 +1,429 @@
 # AI Bridge
 
+## List AI Bridge providers
+
+### Code samples
+
+```shell
+# Example request using curl
+curl -X GET http://coder-server:8080/api/v2/ai/providers \
+  -H 'Accept: application/json' \
+  -H 'Coder-Session-Token: API_KEY'
+```
+
+`GET /api/v2/ai/providers`
+
+### Example responses
+
+> 200 Response
+
+```json
+[
+  {
+    "base_url": "string",
+    "created_at": "2019-08-24T14:15:22Z",
+    "display_name": "string",
+    "enabled": true,
+    "id": "497f6eca-6276-4993-bfeb-53cbbbba6f08",
+    "name": "string",
+    "settings": {
+      "bedrock_access_key": "string",
+      "bedrock_access_key_secret": "string",
+      "bedrock_model": "string",
+      "bedrock_region": "string",
+      "bedrock_small_fast_model": "string"
+    },
+    "type": "openai",
+    "updated_at": "2019-08-24T14:15:22Z"
+  }
+]
+```
+
+### Responses
+
+| Status | Meaning                                                 | Description | Schema                                                        |
+|--------|---------------------------------------------------------|-------------|---------------------------------------------------------------|
+| 200    | [OK](https://tools.ietf.org/html/rfc7231#section-6.3.1) | OK          | array of [codersdk.AIProvider](schemas.md#codersdkaiprovider) |
+
+<h3 id="list-ai-bridge-providers-responseschema">Response Schema</h3>
+
+Status Code **200**
+
+| Name                           | Type                                                                 | Required | Restrictions | Description                                                                                                                                                                          |
+|--------------------------------|----------------------------------------------------------------------|----------|--------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `[array item]`                 | array                                                                | false    |              |                                                                                                                                                                                      |
+| `» base_url`                   | string                                                               | false    |              |                                                                                                                                                                                      |
+| `» created_at`                 | string(date-time)                                                    | false    |              |                                                                                                                                                                                      |
+| `» display_name`               | string                                                               | false    |              |                                                                                                                                                                                      |
+| `» enabled`                    | boolean                                                              | false    |              |                                                                                                                                                                                      |
+| `» id`                         | string(uuid)                                                         | false    |              |                                                                                                                                                                                      |
+| `» name`                       | string                                                               | false    |              |                                                                                                                                                                                      |
+| `» settings`                   | [codersdk.AIProviderSettings](schemas.md#codersdkaiprovidersettings) | false    |              |                                                                                                                                                                                      |
+| `»» bedrock_access_key`        | string                                                               | false    |              | Bedrock access key is the AWS access key ID used to authenticate against Bedrock. Write-only.                                                                                        |
+| `»» bedrock_access_key_secret` | string                                                               | false    |              | Bedrock access key secret is the AWS secret access key paired with BedrockAccessKey. Write-only.                                                                                     |
+| `»» bedrock_model`             | string                                                               | false    |              | Bedrock model is the AWS Bedrock model identifier used for primary requests. Only meaningful when Type is AIProviderTypeAnthropic.                                                   |
+| `»» bedrock_region`            | string                                                               | false    |              | Bedrock region is the AWS region used to construct the Bedrock endpoint URL when BaseURL is not set on the parent provider. Only meaningful when Type is AIProviderTypeAnthropic.    |
+| `»» bedrock_small_fast_model`  | string                                                               | false    |              | Bedrock small fast model is the AWS Bedrock model identifier used for background tasks (e.g. Claude Code's haiku-class model). Only meaningful when Type is AIProviderTypeAnthropic. |
+| `» type`                       | [codersdk.AIProviderType](schemas.md#codersdkaiprovidertype)         | false    |              |                                                                                                                                                                                      |
+| `» updated_at`                 | string(date-time)                                                    | false    |              |                                                                                                                                                                                      |
+
+#### Enumerated Values
+
+| Property | Value(s)              |
+|----------|-----------------------|
+| `type`   | `anthropic`, `openai` |
+
+To perform this operation, you must be authenticated. [Learn more](authentication.md).
+
+## Create an AI Bridge provider
+
+### Code samples
+
+```shell
+# Example request using curl
+curl -X POST http://coder-server:8080/api/v2/ai/providers \
+  -H 'Content-Type: application/json' \
+  -H 'Accept: application/json' \
+  -H 'Coder-Session-Token: API_KEY'
+```
+
+`POST /api/v2/ai/providers`
+
+> Body parameter
+
+```json
+{
+  "base_url": "string",
+  "display_name": "string",
+  "enabled": true,
+  "name": "string",
+  "settings": {
+    "bedrock_access_key": "string",
+    "bedrock_access_key_secret": "string",
+    "bedrock_model": "string",
+    "bedrock_region": "string",
+    "bedrock_small_fast_model": "string"
+  },
+  "type": "openai"
+}
+```
+
+### Parameters
+
+| Name   | In   | Type                                                                           | Required | Description                |
+|--------|------|--------------------------------------------------------------------------------|----------|----------------------------|
+| `body` | body | [codersdk.CreateAIProviderRequest](schemas.md#codersdkcreateaiproviderrequest) | true     | Create AI provider request |
+
+### Example responses
+
+> 201 Response
+
+```json
+{
+  "base_url": "string",
+  "created_at": "2019-08-24T14:15:22Z",
+  "display_name": "string",
+  "enabled": true,
+  "id": "497f6eca-6276-4993-bfeb-53cbbbba6f08",
+  "name": "string",
+  "settings": {
+    "bedrock_access_key": "string",
+    "bedrock_access_key_secret": "string",
+    "bedrock_model": "string",
+    "bedrock_region": "string",
+    "bedrock_small_fast_model": "string"
+  },
+  "type": "openai",
+  "updated_at": "2019-08-24T14:15:22Z"
+}
+```
+
+### Responses
+
+| Status | Meaning                                                      | Description | Schema                                               |
+|--------|--------------------------------------------------------------|-------------|------------------------------------------------------|
+| 201    | [Created](https://tools.ietf.org/html/rfc7231#section-6.3.2) | Created     | [codersdk.AIProvider](schemas.md#codersdkaiprovider) |
+
+To perform this operation, you must be authenticated. [Learn more](authentication.md).
+
+## Get an AI Bridge provider
+
+### Code samples
+
+```shell
+# Example request using curl
+curl -X GET http://coder-server:8080/api/v2/ai/providers/{idOrName} \
+  -H 'Accept: application/json' \
+  -H 'Coder-Session-Token: API_KEY'
+```
+
+`GET /api/v2/ai/providers/{idOrName}`
+
+### Parameters
+
+| Name       | In   | Type   | Required | Description         |
+|------------|------|--------|----------|---------------------|
+| `idOrName` | path | string | true     | Provider ID or name |
+
+### Example responses
+
+> 200 Response
+
+```json
+{
+  "base_url": "string",
+  "created_at": "2019-08-24T14:15:22Z",
+  "display_name": "string",
+  "enabled": true,
+  "id": "497f6eca-6276-4993-bfeb-53cbbbba6f08",
+  "name": "string",
+  "settings": {
+    "bedrock_access_key": "string",
+    "bedrock_access_key_secret": "string",
+    "bedrock_model": "string",
+    "bedrock_region": "string",
+    "bedrock_small_fast_model": "string"
+  },
+  "type": "openai",
+  "updated_at": "2019-08-24T14:15:22Z"
+}
+```
+
+### Responses
+
+| Status | Meaning                                                 | Description | Schema                                               |
+|--------|---------------------------------------------------------|-------------|------------------------------------------------------|
+| 200    | [OK](https://tools.ietf.org/html/rfc7231#section-6.3.1) | OK          | [codersdk.AIProvider](schemas.md#codersdkaiprovider) |
+
+To perform this operation, you must be authenticated. [Learn more](authentication.md).
+
+## Delete an AI Bridge provider
+
+### Code samples
+
+```shell
+# Example request using curl
+curl -X DELETE http://coder-server:8080/api/v2/ai/providers/{idOrName} \
+  -H 'Coder-Session-Token: API_KEY'
+```
+
+`DELETE /api/v2/ai/providers/{idOrName}`
+
+### Parameters
+
+| Name       | In   | Type   | Required | Description         |
+|------------|------|--------|----------|---------------------|
+| `idOrName` | path | string | true     | Provider ID or name |
+
+### Responses
+
+| Status | Meaning                                                         | Description | Schema |
+|--------|-----------------------------------------------------------------|-------------|--------|
+| 204    | [No Content](https://tools.ietf.org/html/rfc7231#section-6.3.5) | No Content  |        |
+
+To perform this operation, you must be authenticated. [Learn more](authentication.md).
+
+## Update an AI Bridge provider
+
+### Code samples
+
+```shell
+# Example request using curl
+curl -X PATCH http://coder-server:8080/api/v2/ai/providers/{idOrName} \
+  -H 'Content-Type: application/json' \
+  -H 'Accept: application/json' \
+  -H 'Coder-Session-Token: API_KEY'
+```
+
+`PATCH /api/v2/ai/providers/{idOrName}`
+
+> Body parameter
+
+```json
+{
+  "base_url": "string",
+  "display_name": "string",
+  "enabled": true,
+  "settings": {
+    "bedrock_access_key": "string",
+    "bedrock_access_key_secret": "string",
+    "bedrock_model": "string",
+    "bedrock_region": "string",
+    "bedrock_small_fast_model": "string"
+  }
+}
+```
+
+### Parameters
+
+| Name       | In   | Type                                                                           | Required | Description                |
+|------------|------|--------------------------------------------------------------------------------|----------|----------------------------|
+| `idOrName` | path | string                                                                         | true     | Provider ID or name        |
+| `body`     | body | [codersdk.UpdateAIProviderRequest](schemas.md#codersdkupdateaiproviderrequest) | true     | Update AI provider request |
+
+### Example responses
+
+> 200 Response
+
+```json
+{
+  "base_url": "string",
+  "created_at": "2019-08-24T14:15:22Z",
+  "display_name": "string",
+  "enabled": true,
+  "id": "497f6eca-6276-4993-bfeb-53cbbbba6f08",
+  "name": "string",
+  "settings": {
+    "bedrock_access_key": "string",
+    "bedrock_access_key_secret": "string",
+    "bedrock_model": "string",
+    "bedrock_region": "string",
+    "bedrock_small_fast_model": "string"
+  },
+  "type": "openai",
+  "updated_at": "2019-08-24T14:15:22Z"
+}
+```
+
+### Responses
+
+| Status | Meaning                                                 | Description | Schema                                               |
+|--------|---------------------------------------------------------|-------------|------------------------------------------------------|
+| 200    | [OK](https://tools.ietf.org/html/rfc7231#section-6.3.1) | OK          | [codersdk.AIProvider](schemas.md#codersdkaiprovider) |
+
+To perform this operation, you must be authenticated. [Learn more](authentication.md).
+
+## List AI Bridge provider keys
+
+### Code samples
+
+```shell
+# Example request using curl
+curl -X GET http://coder-server:8080/api/v2/ai/providers/{idOrName}/keys \
+  -H 'Accept: application/json' \
+  -H 'Coder-Session-Token: API_KEY'
+```
+
+`GET /api/v2/ai/providers/{idOrName}/keys`
+
+### Parameters
+
+| Name       | In   | Type   | Required | Description         |
+|------------|------|--------|----------|---------------------|
+| `idOrName` | path | string | true     | Provider ID or name |
+
+### Example responses
+
+> 200 Response
+
+```json
+[
+  {
+    "created_at": "2019-08-24T14:15:22Z",
+    "id": "497f6eca-6276-4993-bfeb-53cbbbba6f08",
+    "provider_id": "fe3d49af-4061-436b-ae60-f7044f252a44",
+    "updated_at": "2019-08-24T14:15:22Z"
+  }
+]
+```
+
+### Responses
+
+| Status | Meaning                                                 | Description | Schema                                                              |
+|--------|---------------------------------------------------------|-------------|---------------------------------------------------------------------|
+| 200    | [OK](https://tools.ietf.org/html/rfc7231#section-6.3.1) | OK          | array of [codersdk.AIProviderKey](schemas.md#codersdkaiproviderkey) |
+
+<h3 id="list-ai-bridge-provider-keys-responseschema">Response Schema</h3>
+
+Status Code **200**
+
+| Name            | Type              | Required | Restrictions | Description |
+|-----------------|-------------------|----------|--------------|-------------|
+| `[array item]`  | array             | false    |              |             |
+| `» created_at`  | string(date-time) | false    |              |             |
+| `» id`          | string(uuid)      | false    |              |             |
+| `» provider_id` | string(uuid)      | false    |              |             |
+| `» updated_at`  | string(date-time) | false    |              |             |
+
+To perform this operation, you must be authenticated. [Learn more](authentication.md).
+
+## Create an AI Bridge provider key
+
+### Code samples
+
+```shell
+# Example request using curl
+curl -X POST http://coder-server:8080/api/v2/ai/providers/{idOrName}/keys \
+  -H 'Content-Type: application/json' \
+  -H 'Accept: application/json' \
+  -H 'Coder-Session-Token: API_KEY'
+```
+
+`POST /api/v2/ai/providers/{idOrName}/keys`
+
+> Body parameter
+
+```json
+{
+  "api_key": "string"
+}
+```
+
+### Parameters
+
+| Name       | In   | Type                                                                                 | Required | Description                    |
+|------------|------|--------------------------------------------------------------------------------------|----------|--------------------------------|
+| `idOrName` | path | string                                                                               | true     | Provider ID or name            |
+| `body`     | body | [codersdk.CreateAIProviderKeyRequest](schemas.md#codersdkcreateaiproviderkeyrequest) | true     | Create AI provider key request |
+
+### Example responses
+
+> 201 Response
+
+```json
+{
+  "created_at": "2019-08-24T14:15:22Z",
+  "id": "497f6eca-6276-4993-bfeb-53cbbbba6f08",
+  "provider_id": "fe3d49af-4061-436b-ae60-f7044f252a44",
+  "updated_at": "2019-08-24T14:15:22Z"
+}
+```
+
+### Responses
+
+| Status | Meaning                                                      | Description | Schema                                                     |
+|--------|--------------------------------------------------------------|-------------|------------------------------------------------------------|
+| 201    | [Created](https://tools.ietf.org/html/rfc7231#section-6.3.2) | Created     | [codersdk.AIProviderKey](schemas.md#codersdkaiproviderkey) |
+
+To perform this operation, you must be authenticated. [Learn more](authentication.md).
+
+## Delete an AI Bridge provider key
+
+### Code samples
+
+```shell
+# Example request using curl
+curl -X DELETE http://coder-server:8080/api/v2/ai/providers/{idOrName}/keys/{keyID} \
+  -H 'Coder-Session-Token: API_KEY'
+```
+
+`DELETE /api/v2/ai/providers/{idOrName}/keys/{keyID}`
+
+### Parameters
+
+| Name       | In   | Type         | Required | Description         |
+|------------|------|--------------|----------|---------------------|
+| `idOrName` | path | string       | true     | Provider ID or name |
+| `keyID`    | path | string(uuid) | true     | Key ID              |
+
+### Responses
+
+| Status | Meaning                                                         | Description | Schema |
+|--------|-----------------------------------------------------------------|-------------|--------|
+| 204    | [No Content](https://tools.ietf.org/html/rfc7231#section-6.3.5) | No Content  |        |
+
+To perform this operation, you must be authenticated. [Learn more](authentication.md).
+
 ## List AI Bridge clients
 
 ### Code samples
