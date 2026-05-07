@@ -147,6 +147,8 @@ Experimental: this endpoint is subject to change.
     ],
     "organization_id": "7c60d51f-b44e-4682-87d6-449835ea4de6",
     "owner_id": "8826ee2e-7933-4665-aef2-2393f84a0d05",
+    "owner_name": "string",
+    "owner_username": "string",
     "parent_chat_id": "c3609ee6-3b11-4a93-b9ae-e4fabcc99359",
     "pin_order": 0,
     "plan_mode": "plan",
@@ -268,6 +270,8 @@ Status Code **200**
 | `» mcp_server_ids`                | array                                                                  | false    |              |                                                                                                                                                                                                                                                                            |
 | `» organization_id`               | string(uuid)                                                           | false    |              |                                                                                                                                                                                                                                                                            |
 | `» owner_id`                      | string(uuid)                                                           | false    |              |                                                                                                                                                                                                                                                                            |
+| `» owner_name`                    | string                                                                 | false    |              |                                                                                                                                                                                                                                                                            |
+| `» owner_username`                | string                                                                 | false    |              |                                                                                                                                                                                                                                                                            |
 | `» parent_chat_id`                | string(uuid)                                                           | false    |              |                                                                                                                                                                                                                                                                            |
 | `» pin_order`                     | integer                                                                | false    |              |                                                                                                                                                                                                                                                                            |
 | `» plan_mode`                     | [codersdk.ChatPlanMode](schemas.md#codersdkchatplanmode)               | false    |              |                                                                                                                                                                                                                                                                            |
@@ -479,6 +483,8 @@ Experimental: this endpoint is subject to change.
       ],
       "organization_id": "7c60d51f-b44e-4682-87d6-449835ea4de6",
       "owner_id": "8826ee2e-7933-4665-aef2-2393f84a0d05",
+      "owner_name": "string",
+      "owner_username": "string",
       "parent_chat_id": "c3609ee6-3b11-4a93-b9ae-e4fabcc99359",
       "pin_order": 0,
       "plan_mode": "plan",
@@ -604,6 +610,8 @@ Experimental: this endpoint is subject to change.
   ],
   "organization_id": "7c60d51f-b44e-4682-87d6-449835ea4de6",
   "owner_id": "8826ee2e-7933-4665-aef2-2393f84a0d05",
+  "owner_name": "string",
+  "owner_username": "string",
   "parent_chat_id": "c3609ee6-3b11-4a93-b9ae-e4fabcc99359",
   "pin_order": 0,
   "plan_mode": "plan",
@@ -880,6 +888,8 @@ Experimental: this endpoint is subject to change.
     ],
     "organization_id": "7c60d51f-b44e-4682-87d6-449835ea4de6",
     "owner_id": "8826ee2e-7933-4665-aef2-2393f84a0d05",
+    "owner_name": "string",
+    "owner_username": "string",
     "parent_chat_id": "c3609ee6-3b11-4a93-b9ae-e4fabcc99359",
     "pin_order": 0,
     "plan_mode": "plan",
@@ -1059,6 +1069,8 @@ Experimental: this endpoint is subject to change.
       ],
       "organization_id": "7c60d51f-b44e-4682-87d6-449835ea4de6",
       "owner_id": "8826ee2e-7933-4665-aef2-2393f84a0d05",
+      "owner_name": "string",
+      "owner_username": "string",
       "parent_chat_id": "c3609ee6-3b11-4a93-b9ae-e4fabcc99359",
       "pin_order": 0,
       "plan_mode": "plan",
@@ -1184,6 +1196,8 @@ Experimental: this endpoint is subject to change.
   ],
   "organization_id": "7c60d51f-b44e-4682-87d6-449835ea4de6",
   "owner_id": "8826ee2e-7933-4665-aef2-2393f84a0d05",
+  "owner_name": "string",
+  "owner_username": "string",
   "parent_chat_id": "c3609ee6-3b11-4a93-b9ae-e4fabcc99359",
   "pin_order": 0,
   "plan_mode": "plan",
@@ -1444,6 +1458,8 @@ Experimental: this endpoint is subject to change.
       ],
       "organization_id": "7c60d51f-b44e-4682-87d6-449835ea4de6",
       "owner_id": "8826ee2e-7933-4665-aef2-2393f84a0d05",
+      "owner_name": "string",
+      "owner_username": "string",
       "parent_chat_id": "c3609ee6-3b11-4a93-b9ae-e4fabcc99359",
       "pin_order": 0,
       "plan_mode": "plan",
@@ -1569,6 +1585,8 @@ Experimental: this endpoint is subject to change.
   ],
   "organization_id": "7c60d51f-b44e-4682-87d6-449835ea4de6",
   "owner_id": "8826ee2e-7933-4665-aef2-2393f84a0d05",
+  "owner_name": "string",
+  "owner_username": "string",
   "parent_chat_id": "c3609ee6-3b11-4a93-b9ae-e4fabcc99359",
   "pin_order": 0,
   "plan_mode": "plan",
@@ -2668,6 +2686,8 @@ Experimental: this endpoint is subject to change.
       ],
       "organization_id": "7c60d51f-b44e-4682-87d6-449835ea4de6",
       "owner_id": "8826ee2e-7933-4665-aef2-2393f84a0d05",
+      "owner_name": "string",
+      "owner_username": "string",
       "parent_chat_id": "c3609ee6-3b11-4a93-b9ae-e4fabcc99359",
       "pin_order": 0,
       "plan_mode": "plan",
@@ -2793,6 +2813,8 @@ Experimental: this endpoint is subject to change.
   ],
   "organization_id": "7c60d51f-b44e-4682-87d6-449835ea4de6",
   "owner_id": "8826ee2e-7933-4665-aef2-2393f84a0d05",
+  "owner_name": "string",
+  "owner_username": "string",
   "parent_chat_id": "c3609ee6-3b11-4a93-b9ae-e4fabcc99359",
   "pin_order": 0,
   "plan_mode": "plan",
