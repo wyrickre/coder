@@ -8031,7 +8031,7 @@ func TestRegenerateChatTitle(t *testing.T) {
 		})
 
 		_, err := client.RegenerateChatTitle(ctx, chat.ID)
-		requireSDKError(t, err, http.StatusNotFound)
+		requireSDKError(t, err, http.StatusForbidden)
 	})
 
 	t.Run("NotFoundForDifferentUser", func(t *testing.T) {
@@ -8301,7 +8301,7 @@ func TestProposeChatTitle(t *testing.T) {
 
 		_, err := client.ProposeChatTitle(ctx, chat.ID)
 
-		requireSDKError(t, err, http.StatusNotFound)
+		requireSDKError(t, err, http.StatusForbidden)
 	})
 
 	t.Run("DoesNotPersistTitleOrBumpUpdatedAt", func(t *testing.T) {
@@ -14374,6 +14374,24 @@ func TestChatReadOnlySharedWriteHandlers(t *testing.T) {
 
 		ctx, _, sharedClient, chat, _ := setup(t)
 		_, err := sharedClient.InterruptChat(ctx, chat.ID)
+
+		requireSDKError(t, err, http.StatusForbidden)
+	})
+
+	t.Run("RegenerateChatTitle", func(t *testing.T) {
+		t.Parallel()
+
+		ctx, _, sharedClient, chat, _ := setup(t)
+		_, err := sharedClient.RegenerateChatTitle(ctx, chat.ID)
+
+		requireSDKError(t, err, http.StatusForbidden)
+	})
+
+	t.Run("ProposeChatTitle", func(t *testing.T) {
+		t.Parallel()
+
+		ctx, _, sharedClient, chat, _ := setup(t)
+		_, err := sharedClient.ProposeChatTitle(ctx, chat.ID)
 
 		requireSDKError(t, err, http.StatusForbidden)
 	})
