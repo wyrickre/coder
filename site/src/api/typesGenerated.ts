@@ -301,8 +301,9 @@ export interface AIConfig {
 // From codersdk/aibridgeproviders.go
 /**
  * AIProvider represents an AI Bridge provider configuration row as
- * returned by the API. APIKey and BedrockAccessKeySecret are write-
- * only and never included in responses.
+ * returned by the API. API keys are stored in a separate
+ * ai_provider_keys table and managed via the keys sub-endpoints;
+ * secret fields on Settings are never included in responses.
  */
 export interface AIProvider {
 	readonly id: string;
@@ -347,9 +348,26 @@ export interface AIProviderConfig {
 
 // From codersdk/aibridgeproviders.go
 /**
+ * AIProviderKey represents a single API key registered against an
+ * AI Bridge provider, as returned by the API. The plaintext APIKey
+ * is write-only and never included in responses.
+ */
+export interface AIProviderKey {
+	readonly id: string;
+	readonly provider_id: string;
+	readonly created_at: string;
+	readonly updated_at: string;
+}
+
+// From codersdk/aibridgeproviders.go
+/**
  * AIProviderSettings holds type-specific provider settings that do
  * not fit the generic API key + base URL pattern. Fields are only
  * meaningful for specific provider types.
+ *
+ * Bedrock-targeted Anthropic providers authenticate via the AWS
+ * credentials stored on this struct, not via an entry in
+ * ai_provider_keys.
  */
 export interface AIProviderSettings {
 	/**
@@ -370,6 +388,16 @@ export interface AIProviderSettings {
 	 * Only meaningful when Type is AIProviderTypeAnthropic.
 	 */
 	readonly bedrock_small_fast_model?: string;
+	/**
+	 * BedrockAccessKey is the AWS access key ID used to authenticate
+	 * against Bedrock. Write-only.
+	 */
+	readonly bedrock_access_key?: string;
+	/**
+	 * BedrockAccessKeySecret is the AWS secret access key paired with
+	 * BedrockAccessKey. Write-only.
+	 */
+	readonly bedrock_access_key_secret?: string;
 }
 
 // From codersdk/aibridgeproviders.go
@@ -2994,8 +3022,22 @@ export interface ConvertLoginRequest {
 
 // From codersdk/aibridgeproviders.go
 /**
+ * CreateAIProviderKeyRequest is the payload for adding an API key to
+ * an AI Bridge provider. Only meaningful for openai and anthropic
+ * providers; Bedrock providers reject this call because they use the
+ * access credentials stored in Settings.
+ */
+export interface CreateAIProviderKeyRequest {
+	readonly api_key: string;
+}
+
+// From codersdk/aibridgeproviders.go
+/**
  * CreateAIProviderRequest is the payload for creating a new AI Bridge
- * provider. Name, Type, and BaseURL are required.
+ * provider. Name, Type, and BaseURL are required. API keys for
+ * OpenAI/Anthropic providers are added via the keys sub-endpoint
+ * after the provider is created; Bedrock providers carry their
+ * credentials in Settings and do not use the keys sub-endpoint.
  */
 export interface CreateAIProviderRequest {
 	readonly type: AIProviderType;
@@ -3003,14 +3045,7 @@ export interface CreateAIProviderRequest {
 	readonly display_name?: string;
 	readonly enabled: boolean;
 	readonly base_url: string;
-	readonly api_key?: string;
 	readonly settings?: AIProviderSettings;
-	/**
-	 * BedrockAccessKeySecret is the AWS secret access key paired with
-	 * APIKey (used as the access key) when configuring an Anthropic
-	 * provider that targets AWS Bedrock. Write-only.
-	 */
-	readonly bedrock_access_key_secret?: string;
 }
 
 // From codersdk/chats.go
@@ -8082,9 +8117,7 @@ export interface UpdateAIProviderRequest {
 	readonly display_name?: string;
 	readonly enabled?: boolean;
 	readonly base_url?: string;
-	readonly api_key?: string;
 	readonly settings?: AIProviderSettings;
-	readonly bedrock_access_key_secret?: string;
 }
 
 // From codersdk/templates.go

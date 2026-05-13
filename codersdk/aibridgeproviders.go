@@ -22,6 +22,10 @@ const (
 // AIProviderSettings holds type-specific provider settings that do
 // not fit the generic API key + base URL pattern. Fields are only
 // meaningful for specific provider types.
+//
+// Bedrock-targeted Anthropic providers authenticate via the AWS
+// credentials stored on this struct, not via an entry in
+// ai_provider_keys.
 type AIProviderSettings struct {
 	// BedrockRegion is the AWS region used to construct the Bedrock
 	// endpoint URL when BaseURL is not set on the parent provider.
@@ -35,11 +39,18 @@ type AIProviderSettings struct {
 	// for background tasks (e.g. Claude Code's haiku-class model).
 	// Only meaningful when Type is AIProviderTypeAnthropic.
 	BedrockSmallFastModel string `json:"bedrock_small_fast_model,omitempty"`
+	// BedrockAccessKey is the AWS access key ID used to authenticate
+	// against Bedrock. Write-only.
+	BedrockAccessKey string `json:"bedrock_access_key,omitempty"`
+	// BedrockAccessKeySecret is the AWS secret access key paired with
+	// BedrockAccessKey. Write-only.
+	BedrockAccessKeySecret string `json:"bedrock_access_key_secret,omitempty"`
 }
 
 // AIProvider represents an AI Bridge provider configuration row as
-// returned by the API. APIKey and BedrockAccessKeySecret are write-
-// only and never included in responses.
+// returned by the API. API keys are stored in a separate
+// ai_provider_keys table and managed via the keys sub-endpoints;
+// secret fields on Settings are never included in responses.
 type AIProvider struct {
 	ID          uuid.UUID          `json:"id" format:"uuid"`
 	Type        AIProviderType     `json:"type"`
@@ -53,19 +64,17 @@ type AIProvider struct {
 }
 
 // CreateAIProviderRequest is the payload for creating a new AI Bridge
-// provider. Name, Type, and BaseURL are required.
+// provider. Name, Type, and BaseURL are required. API keys for
+// OpenAI/Anthropic providers are added via the keys sub-endpoint
+// after the provider is created; Bedrock providers carry their
+// credentials in Settings and do not use the keys sub-endpoint.
 type CreateAIProviderRequest struct {
 	Type        AIProviderType     `json:"type"`
 	Name        string             `json:"name"`
 	DisplayName string             `json:"display_name,omitempty"`
 	Enabled     bool               `json:"enabled"`
 	BaseURL     string             `json:"base_url"`
-	APIKey      string             `json:"api_key,omitempty"`
 	Settings    AIProviderSettings `json:"settings,omitempty"`
-	// BedrockAccessKeySecret is the AWS secret access key paired with
-	// APIKey (used as the access key) when configuring an Anthropic
-	// provider that targets AWS Bedrock. Write-only.
-	BedrockAccessKeySecret string `json:"bedrock_access_key_secret,omitempty"`
 }
 
 // UpdateAIProviderRequest is the payload for partially updating an
@@ -73,17 +82,33 @@ type CreateAIProviderRequest struct {
 // fields distinguish "not sent" (nil) from "set to empty/zero" (a
 // pointer to the zero value).
 type UpdateAIProviderRequest struct {
-	DisplayName            *string             `json:"display_name,omitempty"`
-	Enabled                *bool               `json:"enabled,omitempty"`
-	BaseURL                *string             `json:"base_url,omitempty"`
-	APIKey                 *string             `json:"api_key,omitempty"`
-	Settings               *AIProviderSettings `json:"settings,omitempty"`
-	BedrockAccessKeySecret *string             `json:"bedrock_access_key_secret,omitempty"`
+	DisplayName *string             `json:"display_name,omitempty"`
+	Enabled     *bool               `json:"enabled,omitempty"`
+	BaseURL     *string             `json:"base_url,omitempty"`
+	Settings    *AIProviderSettings `json:"settings,omitempty"`
+}
+
+// AIProviderKey represents a single API key registered against an
+// AI Bridge provider, as returned by the API. The plaintext APIKey
+// is write-only and never included in responses.
+type AIProviderKey struct {
+	ID         uuid.UUID `json:"id" format:"uuid"`
+	ProviderID uuid.UUID `json:"provider_id" format:"uuid"`
+	CreatedAt  time.Time `json:"created_at" format:"date-time"`
+	UpdatedAt  time.Time `json:"updated_at" format:"date-time"`
+}
+
+// CreateAIProviderKeyRequest is the payload for adding an API key to
+// an AI Bridge provider. Only meaningful for openai and anthropic
+// providers; Bedrock providers reject this call because they use the
+// access credentials stored in Settings.
+type CreateAIProviderKeyRequest struct {
+	APIKey string `json:"api_key"`
 }
 
 // AIProviders lists all (non-deleted) AI Bridge providers.
 func (c *Client) AIProviders(ctx context.Context) ([]AIProvider, error) {
-	res, err := c.Request(ctx, http.MethodGet, "/api/v2/aibridge/providers", nil)
+	res, err := c.Request(ctx, http.MethodGet, "/api/v2/ai/providers", nil)
 	if err != nil {
 		return nil, err
 	}
@@ -97,7 +122,7 @@ func (c *Client) AIProviders(ctx context.Context) ([]AIProvider, error) {
 
 // AIProvider fetches a single AI Bridge provider by ID or name.
 func (c *Client) AIProvider(ctx context.Context, idOrName string) (AIProvider, error) {
-	res, err := c.Request(ctx, http.MethodGet, fmt.Sprintf("/api/v2/aibridge/providers/%s", idOrName), nil)
+	res, err := c.Request(ctx, http.MethodGet, fmt.Sprintf("/api/v2/ai/providers/%s", idOrName), nil)
 	if err != nil {
 		return AIProvider{}, err
 	}
@@ -111,7 +136,7 @@ func (c *Client) AIProvider(ctx context.Context, idOrName string) (AIProvider, e
 
 // CreateAIProvider creates a new AI Bridge provider.
 func (c *Client) CreateAIProvider(ctx context.Context, req CreateAIProviderRequest) (AIProvider, error) {
-	res, err := c.Request(ctx, http.MethodPost, "/api/v2/aibridge/providers", req)
+	res, err := c.Request(ctx, http.MethodPost, "/api/v2/ai/providers", req)
 	if err != nil {
 		return AIProvider{}, err
 	}
@@ -126,7 +151,7 @@ func (c *Client) CreateAIProvider(ctx context.Context, req CreateAIProviderReque
 // UpdateAIProvider partially updates an AI Bridge provider identified
 // by ID or name.
 func (c *Client) UpdateAIProvider(ctx context.Context, idOrName string, req UpdateAIProviderRequest) (AIProvider, error) {
-	res, err := c.Request(ctx, http.MethodPatch, fmt.Sprintf("/api/v2/aibridge/providers/%s", idOrName), req)
+	res, err := c.Request(ctx, http.MethodPatch, fmt.Sprintf("/api/v2/ai/providers/%s", idOrName), req)
 	if err != nil {
 		return AIProvider{}, err
 	}
@@ -142,7 +167,52 @@ func (c *Client) UpdateAIProvider(ctx context.Context, idOrName string, req Upda
 // ID or name. The row is preserved for audit/FK history; the name
 // remains permanently reserved.
 func (c *Client) DeleteAIProvider(ctx context.Context, idOrName string) error {
-	res, err := c.Request(ctx, http.MethodDelete, fmt.Sprintf("/api/v2/aibridge/providers/%s", idOrName), nil)
+	res, err := c.Request(ctx, http.MethodDelete, fmt.Sprintf("/api/v2/ai/providers/%s", idOrName), nil)
+	if err != nil {
+		return err
+	}
+	defer res.Body.Close()
+	if res.StatusCode != http.StatusNoContent {
+		return ReadBodyAsError(res)
+	}
+	return nil
+}
+
+// AIProviderKeys lists the API keys registered against an AI Bridge
+// provider identified by ID or name. The plaintext key value is
+// never returned.
+func (c *Client) AIProviderKeys(ctx context.Context, idOrName string) ([]AIProviderKey, error) {
+	res, err := c.Request(ctx, http.MethodGet, fmt.Sprintf("/api/v2/ai/providers/%s/keys", idOrName), nil)
+	if err != nil {
+		return nil, err
+	}
+	defer res.Body.Close()
+	if res.StatusCode != http.StatusOK {
+		return nil, ReadBodyAsError(res)
+	}
+	var keys []AIProviderKey
+	return keys, json.NewDecoder(res.Body).Decode(&keys)
+}
+
+// CreateAIProviderKey registers a new API key against an AI Bridge
+// provider identified by ID or name.
+func (c *Client) CreateAIProviderKey(ctx context.Context, idOrName string, req CreateAIProviderKeyRequest) (AIProviderKey, error) {
+	res, err := c.Request(ctx, http.MethodPost, fmt.Sprintf("/api/v2/ai/providers/%s/keys", idOrName), req)
+	if err != nil {
+		return AIProviderKey{}, err
+	}
+	defer res.Body.Close()
+	if res.StatusCode != http.StatusCreated {
+		return AIProviderKey{}, ReadBodyAsError(res)
+	}
+	var key AIProviderKey
+	return key, json.NewDecoder(res.Body).Decode(&key)
+}
+
+// DeleteAIProviderKey removes a single API key from an AI Bridge
+// provider.
+func (c *Client) DeleteAIProviderKey(ctx context.Context, idOrName string, keyID uuid.UUID) error {
+	res, err := c.Request(ctx, http.MethodDelete, fmt.Sprintf("/api/v2/ai/providers/%s/keys/%s", idOrName, keyID), nil)
 	if err != nil {
 		return err
 	}
