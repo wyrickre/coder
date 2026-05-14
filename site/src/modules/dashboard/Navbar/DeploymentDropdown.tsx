@@ -15,8 +15,9 @@ interface DeploymentDropdownProps {
 	canViewOrganizations: boolean;
 	canViewAuditLog: boolean;
 	canViewConnectionLog: boolean;
-	canViewHealth: boolean;
 	canViewAIBridge: boolean;
+	canViewAISettings: boolean;
+	canViewHealth: boolean;
 }
 
 export const DeploymentDropdown: FC<DeploymentDropdownProps> = ({
@@ -24,19 +25,20 @@ export const DeploymentDropdown: FC<DeploymentDropdownProps> = ({
 	canViewOrganizations,
 	canViewAuditLog,
 	canViewConnectionLog,
-	canViewHealth,
 	canViewAIBridge,
+	canViewAISettings,
+	canViewHealth,
 }) => {
 	if (
 		!canViewAuditLog &&
 		!canViewConnectionLog &&
 		!canViewDeployment &&
 		!canViewOrganizations &&
-		!canViewHealth &&
-		!canViewAIBridge
-	) {
+		!canViewAIBridge &&
+		!canViewAISettings &&
+		!canViewHealth
+	)
 		return null;
-	}
 
 	return (
 		<DropdownMenu>
@@ -53,8 +55,9 @@ export const DeploymentDropdown: FC<DeploymentDropdownProps> = ({
 					canViewOrganizations={canViewOrganizations}
 					canViewAuditLog={canViewAuditLog}
 					canViewConnectionLog={canViewConnectionLog}
-					canViewHealth={canViewHealth}
 					canViewAIBridge={canViewAIBridge}
+					canViewAISettings={canViewAISettings}
+					canViewHealth={canViewHealth}
 				/>
 			</DropdownMenuContent>
 		</DropdownMenu>
@@ -64,9 +67,10 @@ export const DeploymentDropdown: FC<DeploymentDropdownProps> = ({
 const DeploymentDropdownContent: FC<DeploymentDropdownProps> = ({
 	canViewDeployment,
 	canViewAuditLog,
-	canViewHealth,
 	canViewConnectionLog,
 	canViewAIBridge,
+	canViewAISettings,
+	canViewHealth,
 }) => {
 	return (
 		<nav>
@@ -91,6 +95,11 @@ const DeploymentDropdownContent: FC<DeploymentDropdownProps> = ({
 			{canViewAIBridge && (
 				<DropdownMenuItem asChild>
 					<Link to="/aibridge/sessions">AI Bridge Sessions</Link>
+				</DropdownMenuItem>
+			)}
+			{canViewAISettings && (
+				<DropdownMenuItem asChild>
+					<Link to="/aigovernance/settings">AI Settings</Link>
 				</DropdownMenuItem>
 			)}
 			{canViewHealth && (
