@@ -766,7 +766,6 @@ const StickyUserMessage = memo<{
 					container.style.setProperty("--clip-h", `${fullHeight}px`);
 					container.style.setProperty("--fade-opacity", "0");
 					container.style.top = `${STICKY_TOP}px`;
-					container.style.visibility = "";
 
 					return;
 				}
@@ -779,7 +778,6 @@ const StickyUserMessage = memo<{
 					container.style.setProperty("--clip-h", `${fullHeight}px`);
 					container.style.setProperty("--fade-opacity", "0");
 					container.style.top = `${STICKY_TOP}px`;
-					container.style.visibility = "";
 
 					return;
 				}
@@ -807,15 +805,9 @@ const StickyUserMessage = memo<{
 				}
 				if (nextSentinel) {
 					const nextY = nextSentinel.getBoundingClientRect().top - scrollerTop;
-					const pushTop = Math.min(STICKY_TOP, nextY - visible + STICKY_TOP);
-					container.style.top = `${pushTop}px`;
-					// Once this container is pushed fully above the
-					// viewport by the next sticky prompt, hide it
-					// entirely to prevent multiple prompts stacking.
-					container.style.visibility = pushTop + visible <= 0 ? "hidden" : "";
+					container.style.top = `${Math.min(STICKY_TOP, nextY - visible + STICKY_TOP)}px`;
 				} else {
 					container.style.top = `${STICKY_TOP}px`;
-					container.style.visibility = "";
 				}
 			};
 			updateFnRef.current = update;
@@ -1179,6 +1171,16 @@ export const ConversationTimeline = memo<ConversationTimelineProps>(
 				>
 					{parsedMessages.map(({ message, parsed }, msgIdx) => {
 						if (message.role === "user") {
+							const { shouldHide } = deriveMessageDisplayState({
+								message,
+								parsed,
+								hideActions: false,
+								hasActiveStream: false,
+								isAwaitingFirstStreamChunk: false,
+							});
+							if (shouldHide) {
+								return null;
+							}
 							return (
 								<StickyUserMessage
 									key={message.id}
