@@ -14,7 +14,7 @@ import {
 	SelectValue,
 } from "#/components/Select/Select";
 import { Spinner } from "#/components/Spinner/Spinner";
-import ProviderIcon from "#/pages/AISettingsPage/ProvidersPage/components/ProviderIcon";
+import { ProviderIcon } from "#/pages/AISettingsPage/ProvidersPage/components/ProviderIcon";
 import { cn } from "#/utils/cn";
 import { getFormHelpers } from "#/utils/formUtils";
 

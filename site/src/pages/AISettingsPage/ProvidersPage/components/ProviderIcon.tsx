@@ -4,35 +4,34 @@ type ProviderIconProps = {
 	provider: string;
 };
 
-const ProviderIcon: React.FC<ProviderIconProps> = ({ provider }) => {
+export const getProviderIcon = (provider: string) => {
 	switch (provider) {
 		case "openai":
-			return (
-				<ExternalImage
-					src="/icon/openai.svg"
-					alt="OpenAI"
-					className="size-icon-sm"
-				/>
-			);
+			return "/icon/openai.svg";
 		case "anthropic":
-			return (
-				<ExternalImage
-					src="/icon/anthropic.svg"
-					alt="Anthropic"
-					className="size-icon-sm"
-				/>
-			);
+			return "/icon/anthropic.svg";
 		case "bedrock":
-			return (
-				<ExternalImage
-					src="/icon/aws.svg"
-					alt="AWS Bedrock"
-					className="size-icon-sm"
-				/>
-			);
-		default:
-			return null;
+			return "/icon/aws.svg";
 	}
 };
 
-export default ProviderIcon;
+export const getProviderName = (provider: string) => {
+	switch (provider) {
+		case "openai":
+			return "OpenAI";
+		case "anthropic":
+			return "Anthropic";
+		case "bedrock":
+			return "AWS Bedrock";
+	}
+};
+
+export const ProviderIcon: React.FC<ProviderIconProps> = ({ provider }) => {
+	return (
+		<ExternalImage
+			src={getProviderIcon(provider)}
+			alt={getProviderName(provider)}
+			className="size-icon-sm"
+		/>
+	);
+};
