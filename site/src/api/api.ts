@@ -19,7 +19,12 @@
  *
  * For example, `utils/delay` must be imported using `../utils/delay` instead.
  */
-import globalAxios, { type AxiosInstance, isAxiosError } from "axios";
+import globalAxios, {
+	AxiosError,
+	type AxiosInstance,
+	type InternalAxiosRequestConfig,
+	isAxiosError,
+} from "axios";
 import type dayjs from "dayjs";
 import userAgentParser from "ua-parser-js";
 import { MOCK_READ_LIST_PROVIDERS } from "#/pages/AISettingsPage/mock";
@@ -3037,6 +3042,31 @@ class ApiMethods {
 		return MOCK_READ_LIST_PROVIDERS;
 	};
 
+	getProvider = async (providerName: string): Promise<AIProvider> => {
+		// const response = await this.axios.get<AIProvider>(
+		// 	`/api/v2/ai/providers/${encodeURIComponent(providerName)}`,
+		// );
+		// return response.data;
+		const found = MOCK_READ_LIST_PROVIDERS.find((p) => p.name === providerName);
+		if (!found) {
+			const config = {} as InternalAxiosRequestConfig;
+			throw new AxiosError<{ message: string }>(
+				"Request failed with status code 404",
+				AxiosError.ERR_BAD_REQUEST,
+				config,
+				undefined,
+				{
+					data: { message: `AI provider ${providerName} was not found.` },
+					status: 404,
+					statusText: "Not Found",
+					headers: {},
+					config,
+				},
+			);
+		}
+		return found;
+	};
+
 	// createProvider = async (req: TypesGen.TODO) => {
 	createProvider = async (
 		_req: CreateAIProviderRequest,
@@ -3048,15 +3078,34 @@ class ApiMethods {
 
 	// updateProvider = async (providerId: string, req: TypesGen.TODO) => {
 	updateProvider = async (
-		_providerName: string,
-		_req: UpdateAIProviderRequest,
+		providerName: string,
+		req: UpdateAIProviderRequest,
 	): Promise<AIProvider> => {
 		// const response = await this.axios.patch(
 		// 	`/api/v2/ai/providers/${encodeURIComponent(providerName)}`,
 		// 	req,
 		// );
-		// return response.data
-		return MOCK_READ_LIST_PROVIDERS[0];
+		// return response.data;
+		const existing = MOCK_READ_LIST_PROVIDERS.find(
+			(p) => p.name === providerName,
+		);
+		if (!existing) {
+			const config = {} as InternalAxiosRequestConfig;
+			throw new AxiosError<{ message: string }>(
+				"Request failed with status code 404",
+				AxiosError.ERR_BAD_REQUEST,
+				config,
+				undefined,
+				{
+					data: { message: `AI provider ${providerName} was not found.` },
+					status: 404,
+					statusText: "Not Found",
+					headers: {},
+					config,
+				},
+			);
+		}
+		return { ...existing, ...req };
 	};
 
 	// deleteProvider = async (providerId: string) => {

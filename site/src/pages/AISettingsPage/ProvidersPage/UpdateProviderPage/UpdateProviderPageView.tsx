@@ -1,10 +1,11 @@
+import { isAxiosError } from "axios";
 import { ArrowLeftIcon } from "lucide-react";
 import { useMutation, useQuery, useQueryClient } from "react-query";
 import { Link, Navigate, useParams } from "react-router";
 import { toast } from "sonner";
 import { getErrorMessage } from "#/api/errors";
 import {
-	aiProvidersList,
+	aiProvider,
 	updateAIProviderMutation,
 } from "#/api/queries/aiProviders";
 import { Avatar } from "#/components/Avatar/Avatar";
@@ -25,18 +26,47 @@ const UpdateProviderPageView: React.FC = () => {
 	const { providerId } = useParams<{ providerId: string }>();
 	const queryClient = useQueryClient();
 
-	const providersQuery = useQuery(aiProvidersList());
-	const provider = providersQuery.data?.find((p) => p.name === providerId);
+	const providerQuery = useQuery({
+		...aiProvider(providerId ?? ""),
+		enabled: Boolean(providerId),
+	});
 
 	const updateMutation = useMutation(
 		updateAIProviderMutation(queryClient, providerId ?? ""),
 	);
 
-	if (providersQuery.isLoading) {
+	if (!providerId) {
+		return <Navigate to="/aisettings" replace />;
+	}
+
+	if (providerQuery.isLoading) {
 		return <Loader fullscreen />;
 	}
 
-	if (!providerId || !provider) {
+	if (providerQuery.isError) {
+		const status = isAxiosError(providerQuery.error)
+			? providerQuery.error.response?.status
+			: undefined;
+		if (status === 404) {
+			return <Navigate to="/aisettings" replace />;
+		}
+		return (
+			<div className="pt-4 px-6 flex flex-col gap-4">
+				<p className="text-content-secondary">
+					{getErrorMessage(providerQuery.error, "Failed to load provider.")}
+				</p>
+				<Link to="/aisettings">
+					<Button variant="subtle">
+						<ArrowLeftIcon />
+						<span>Back to providers</span>
+					</Button>
+				</Link>
+			</div>
+		);
+	}
+
+	const provider = providerQuery.data;
+	if (!provider) {
 		return <Navigate to="/aisettings" replace />;
 	}
 

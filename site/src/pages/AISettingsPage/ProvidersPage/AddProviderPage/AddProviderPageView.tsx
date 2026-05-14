@@ -44,9 +44,9 @@ const AddProviderPageView: React.FC = () => {
 						submitError={createMutation.error}
 						onSubmit={(values) => {
 							createMutation.mutate(providerFormValuesToCreateRequest(values), {
-								onSuccess: () => {
+								onSuccess: (res) => {
 									toast.success("Provider added.");
-									void navigate("/aisettings");
+									void navigate(`/aisettings/${res.name}`);
 								},
 								onError: (error) => {
 									toast.error(

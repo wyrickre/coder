@@ -8,9 +8,17 @@ import {
 
 export const aiProvidersListKey = ["ai", "providers"] as const;
 
+export const aiProviderKey = (providerName: string) =>
+	[...aiProvidersListKey, providerName] as const;
+
 export const aiProvidersList = () => ({
 	queryKey: aiProvidersListKey,
 	queryFn: (): Promise<AIProvider[]> => API.getProviders(),
+});
+
+export const aiProvider = (providerName: string) => ({
+	queryKey: aiProviderKey(providerName),
+	queryFn: (): Promise<AIProvider> => API.getProvider(providerName),
 });
 
 export const createAIProviderMutation = (queryClient: QueryClient) => ({
