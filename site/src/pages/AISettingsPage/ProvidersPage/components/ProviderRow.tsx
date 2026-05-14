@@ -1,9 +1,9 @@
 import { ChevronRightIcon } from "lucide-react";
 import { Avatar } from "#/components/Avatar/Avatar";
 import { AvatarData } from "#/components/Avatar/AvatarData";
-import { ExternalImage } from "#/components/ExternalImage/ExternalImage";
 import { TableCell, TableRow } from "#/components/Table/Table";
 import type { MOCK_READ_LIST_PROVIDERS } from "#/pages/AISettingsPage/mock";
+import ProviderIcon from "#/pages/AISettingsPage/ProvidersPage/components/ProviderIcon";
 
 type ProviderRowProps = {
 	provider: (typeof MOCK_READ_LIST_PROVIDERS)[number];
@@ -32,7 +32,7 @@ export const ProviderRow: React.FC<ProviderRowProps> = ({
 					}
 					avatar={
 						<Avatar className="flex items-center justify-center">
-							<ExternalImage src="/icon/openai.svg" className="size-icon-sm" />
+							<ProviderIcon provider={provider.type} />
 						</Avatar>
 					}
 				/>

@@ -12,6 +12,17 @@ export const MOCK_READ_LIST_PROVIDERS = [
 	},
 	{
 		type: "anthropic",
+		name: "anthropic",
+		display_name: "Anthropic",
+		base_url: "https://api.anthropic.com",
+		api_keys: ["abcd....wxyz"], // masked API key(s)
+		settings: null,
+		enabled: false,
+		created_at: "...UTC",
+		updated_at: "...UTC",
+	},
+	{
+		type: "bedrock",
 		name: "bedrock",
 		display_name: "Bedrock",
 		base_url: "https://bedrock-runtime.us-east-2.amazonaws.com",
