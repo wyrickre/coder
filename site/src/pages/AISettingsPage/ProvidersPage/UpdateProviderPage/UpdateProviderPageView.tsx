@@ -46,6 +46,8 @@ const UpdateProviderPageView: React.FC = () => {
 		deleteAIProviderMutation(queryClient, providerId ?? ""),
 	);
 
+	const provider = providerQuery.data;
+
 	if (!providerId) {
 		return <Navigate to="/aisettings" replace />;
 	}
@@ -76,7 +78,6 @@ const UpdateProviderPageView: React.FC = () => {
 		);
 	}
 
-	const provider = providerQuery.data;
 	if (!provider) {
 		return <Navigate to="/aisettings" replace />;
 	}
@@ -120,6 +121,11 @@ const UpdateProviderPageView: React.FC = () => {
 				<div className="border border-solid p-6 rounded-lg">
 					<ProviderForm
 						editing
+						// Use the provider identity as the key so navigating to a
+						// different provider remounts the form with fresh values,
+						// while background refetches of the same provider don't
+						// reset in-progress edits.
+						key={provider.id}
 						bedrockSavedAccessCredentials={hasBedrockStoredCredentials(
 							provider,
 						)}

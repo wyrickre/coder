@@ -196,7 +196,6 @@ export const ProviderForm: FC<ProviderFormProps> = ({
 		},
 		validationSchema: getProviderFormSchema(editing),
 		onSubmit: onSubmit ?? (() => {}),
-		enableReinitialize: initialValues !== undefined,
 	});
 	const getFieldHelpers = getFormHelpers(form, submitError);
 	const typeField = getFieldHelpers("type");
