@@ -1,3 +1,5 @@
+import { useQuery } from "react-query";
+import { API } from "#/api/api";
 import { useAuthenticated } from "#/hooks/useAuthenticated";
 import { RequirePermission } from "#/modules/permissions/RequirePermission";
 import { MOCK_READ_LIST_PROVIDERS } from "#/pages/AISettingsPage/mock";
@@ -14,12 +16,18 @@ const ProvidersPage: React.FC = () => {
 		providers: MOCK_READ_LIST_PROVIDERS,
 	};
 
+	const organizationsQuery = useQuery({
+		queryKey: ["organizations"],
+		queryFn: () => API.getOrganizations(),
+	});
+
 	return (
 		<RequirePermission isFeatureVisible={hasPermission}>
 			<ProvidersPageView
 				isLoading={isLoading}
 				isFetching={isFetching}
 				providers={providers}
+				organizations={organizationsQuery.data}
 			/>
 		</RequirePermission>
 	);
