@@ -137,12 +137,15 @@ const UpdateProviderPageView: React.FC = () => {
 								providerFormValuesToCreateRequest(values, provider),
 								{
 									onSuccess: () => {
-										toast.success("Provider updated.");
+										toast.success(`Provider "${provider.name}" updated.`);
 										setProviderFormKey((k) => k + 1);
 									},
 									onError: (error) => {
 										toast.error(
-											getErrorMessage(error, "Failed to update provider."),
+											getErrorMessage(
+												error,
+												`Failed to update provider "${provider.name}".`,
+											),
 										);
 									},
 								},
@@ -163,13 +166,16 @@ const UpdateProviderPageView: React.FC = () => {
 					onConfirm={() => {
 						deleteMutation.mutate(undefined, {
 							onSuccess: () => {
-								toast.success("Provider deleted.");
+								toast.success(`Provider "${provider.name}" deleted.`);
 								setDeleteDialogOpen(false);
 								void navigate("/aisettings", { replace: true });
 							},
 							onError: (error) => {
 								toast.error(
-									getErrorMessage(error, "Failed to delete provider."),
+									getErrorMessage(
+										error,
+										`Failed to delete provider "${provider.name}".`,
+									),
 								);
 							},
 						});
