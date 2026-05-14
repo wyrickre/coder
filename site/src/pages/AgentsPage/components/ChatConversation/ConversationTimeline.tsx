@@ -682,6 +682,7 @@ const ChatMessageItem = memo<{
 														}}
 													>
 														<ChevronLeftIcon />
+														<span className="sr-only">Previous prompt</span>
 													</Button>
 												</TooltipTrigger>
 												<TooltipContent side="bottom">
@@ -703,6 +704,7 @@ const ChatMessageItem = memo<{
 														}}
 													>
 														<ChevronRightIcon />
+														<span className="sr-only">Next prompt</span>
 													</Button>
 												</TooltipTrigger>
 												<TooltipContent side="bottom">
