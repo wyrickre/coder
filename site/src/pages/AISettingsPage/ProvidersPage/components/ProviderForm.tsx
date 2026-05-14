@@ -14,6 +14,7 @@ import {
 	SelectValue,
 } from "#/components/Select/Select";
 import { Spinner } from "#/components/Spinner/Spinner";
+import ProviderIcon from "#/pages/AISettingsPage/ProvidersPage/components/ProviderIcon";
 import { cn } from "#/utils/cn";
 import { getFormHelpers } from "#/utils/formUtils";
 
@@ -140,9 +141,24 @@ export const ProviderForm: FC<ProviderFormProps> = ({
 							<SelectValue placeholder="Select type" />
 						</SelectTrigger>
 						<SelectContent>
-							<SelectItem value="anthropic">Anthropic</SelectItem>
-							<SelectItem value="openai">OpenAI</SelectItem>
-							<SelectItem value="bedrock">Bedrock</SelectItem>
+							<SelectItem value="anthropic">
+								<span className="flex items-center gap-2">
+									<ProviderIcon provider="anthropic" />
+									Anthropic
+								</span>
+							</SelectItem>
+							<SelectItem value="openai">
+								<span className="flex items-center gap-2">
+									<ProviderIcon provider="openai" />
+									OpenAI
+								</span>
+							</SelectItem>
+							<SelectItem value="bedrock">
+								<span className="flex items-center gap-2">
+									<ProviderIcon provider="bedrock" />
+									Bedrock
+								</span>
+							</SelectItem>
 						</SelectContent>
 					</Select>
 					{typeField.error ? (
