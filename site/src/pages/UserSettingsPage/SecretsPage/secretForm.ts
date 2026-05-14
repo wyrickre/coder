@@ -10,7 +10,7 @@ import type {
 	UserSecret,
 } from "#/api/typesGenerated";
 
-interface SecretFormValues {
+export interface SecretFormValues {
 	name: string;
 	value: string;
 	description: string;
@@ -20,7 +20,7 @@ interface SecretFormValues {
 
 type SecretFormField = keyof SecretFormValues;
 
-type SecretFieldErrors = Partial<Record<SecretFormField, string>>;
+export type SecretFieldErrors = Partial<Record<SecretFormField, string>>;
 
 interface SecretFormErrors {
 	fieldErrors: SecretFieldErrors;
@@ -155,6 +155,33 @@ export const createSecretValidationSchema = Yup.object({
 		}),
 	value: Yup.string()
 		.required("Value is required.")
+		.test("valid-secret-value", function (value) {
+			const error = validateUserSecretValue(value ?? "");
+			return error ? this.createError({ message: error }) : true;
+		}),
+	description: Yup.string().default(""),
+	env_name: Yup.string()
+		.default("")
+		.test("valid-env-name", function (value) {
+			const error = validateUserSecretEnvName(value ?? "");
+			return error ? this.createError({ message: error }) : true;
+		}),
+	file_path: Yup.string()
+		.default("")
+		.test("valid-file-path", function (value) {
+			const error = validateUserSecretFilePath(value ?? "");
+			return error ? this.createError({ message: error }) : true;
+		}),
+});
+
+export const updateSecretValidationSchema = Yup.object({
+	name: Yup.string()
+		.test("valid-secret-name", function (value) {
+			const error = validateUserSecretName(value ?? "");
+			return error ? this.createError({ message: error }) : true;
+		}),
+	value: Yup.string()
+		.default("")
 		.test("valid-secret-value", function (value) {
 			const error = validateUserSecretValue(value ?? "");
 			return error ? this.createError({ message: error }) : true;
