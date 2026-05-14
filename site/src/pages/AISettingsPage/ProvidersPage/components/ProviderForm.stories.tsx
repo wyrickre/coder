@@ -22,7 +22,7 @@ export const AddOpenAI: Story = {
 		initialValues: {
 			type: "openai",
 			name: "Corporate OpenAI",
-			baseURL: "https://api.openai.com/v1",
+			baseUrl: "https://api.openai.com/v1",
 			apiKey: "sk-example",
 			enabled: true,
 		},
@@ -67,7 +67,7 @@ export const EditProvider: Story = {
 		initialValues: {
 			type: "anthropic",
 			name: "production-anthropic",
-			baseURL: "https://api.anthropic.com",
+			baseUrl: "https://api.anthropic.com",
 			apiKey: "",
 			enabled: true,
 		},
@@ -80,7 +80,7 @@ export const Submitting: Story = {
 		initialValues: {
 			type: "openai",
 			name: "openai",
-			baseURL: "https://api.openai.com/v1",
+			baseUrl: "https://api.openai.com/v1",
 			apiKey: "sk-example",
 		},
 	},

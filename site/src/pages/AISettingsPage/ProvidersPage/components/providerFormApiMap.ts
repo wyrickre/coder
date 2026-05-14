@@ -90,7 +90,7 @@ export function providerFormValuesToCreateRequest(
 		type: values.type as "openai" | "anthropic",
 		name: values.name,
 		display_name: values.name,
-		base_url: values.baseURL,
+		base_url: values.baseUrl,
 		enabled: values.enabled,
 		settings: null,
 		...(api_keys !== undefined && api_keys.length > 0 ? { api_keys } : {}),
@@ -117,7 +117,7 @@ export function aiProviderToFormValues(
 	return {
 		type: provider.type === "openai" ? "openai" : "anthropic",
 		name: provider.name,
-		baseURL: provider.base_url,
+		baseUrl: provider.base_url,
 		apiKey: "",
 		enabled: provider.enabled,
 	};

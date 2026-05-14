@@ -26,7 +26,6 @@ import { getFormHelpers } from "#/utils/formUtils";
 export type ProviderFormValues = {
 	type: "" | "openai" | "anthropic" | "bedrock";
 	name: string;
-	baseURL: string;
 	baseUrl: string;
 	model: string;
 	smallFastModel: string;
@@ -47,7 +46,6 @@ const OMITTED_CREDENTIAL_MASK = "********";
 const defaultInitialValues: ProviderFormValues = {
 	type: "anthropic",
 	name: "",
-	baseURL: "",
 	baseUrl: "",
 	model: "",
 	smallFastModel: "",
@@ -63,7 +61,7 @@ const makeOpenAiAnthropicSchema = (editing: boolean) =>
 			.oneOf(["openai", "anthropic"] as const)
 			.required(),
 		name: Yup.string().required("Name is required"),
-		baseURL: Yup.string().required("Base URL is required"),
+		baseUrl: Yup.string().url("Custom endpoint must be a valid URL"),
 		apiKey: editing
 			? Yup.string()
 			: Yup.string().required("API key is required"),
@@ -83,6 +81,7 @@ const makeBedrockSchema = (editing: boolean) => {
 				"Base URL must be a valid Bedrock Runtime API base URL",
 			)
 			.required("Base URL is required"),
+		apiKey: Yup.string(),
 		model: Yup.string().required("Model is required"),
 		smallFastModel: Yup.string().required("Small fast model is required"),
 		accessKey: editing
@@ -259,8 +258,8 @@ export const ProviderForm: FC<ProviderFormProps> = ({
 							className="w-full"
 						/>
 						<FormField
-							field={getFieldHelpers("baseURL")}
-							label="Base URL"
+							field={getFieldHelpers("baseUrl")}
+							label="Custom endpoint"
 							description="Custom endpoint for this provider. Leave empty to use the default."
 							className="w-full"
 						/>
