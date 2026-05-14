@@ -4,7 +4,19 @@ import type {
 	CreateAIProviderRequest,
 	UpdateAIProviderRequest,
 } from "#/api/typesGenerated";
-import type { ProviderFormValues } from "./ProviderForm";
+import { type ProviderFormValues, SAVED_CREDENTIAL_MASK } from "./ProviderForm";
+
+/**
+ * Treat the saved-credential mask the same as an empty value: never round-trip
+ * the placeholder back to the API.
+ */
+const sanitizeCredential = (value: string): string => {
+	const trimmed = value.trim();
+	if (trimmed === "" || trimmed === SAVED_CREDENTIAL_MASK) {
+		return "";
+	}
+	return trimmed;
+};
 
 /**
  * The wire API only knows about `openai` and `anthropic`; AWS Bedrock is a
@@ -60,8 +72,8 @@ export const providerFormValuesToCreate = (
 		const settings: AIProviderSettings = {
 			bedrock_model: values.model.trim(),
 			bedrock_small_fast_model: values.smallFastModel.trim(),
-			bedrock_access_key: values.accessKey.trim(),
-			bedrock_access_key_secret: values.accessKeySecret.trim(),
+			bedrock_access_key: sanitizeCredential(values.accessKey),
+			bedrock_access_key_secret: sanitizeCredential(values.accessKeySecret),
 		};
 		return {
 			request: {
@@ -83,7 +95,7 @@ export const providerFormValuesToCreate = (
 			base_url: baseUrl,
 			enabled: values.enabled,
 		},
-		apiKey: values.apiKey.trim() || undefined,
+		apiKey: sanitizeCredential(values.apiKey) || undefined,
 	};
 };
 
@@ -108,8 +120,11 @@ export const providerFormValuesToUpdate = (
 		return base;
 	}
 
-	const newAccessKey = values.accessKey.trim();
-	const newAccessKeySecret = values.accessKeySecret.trim();
+	const newAccessKey = sanitizeCredential(values.accessKey);
+	const newAccessKeySecret = sanitizeCredential(values.accessKeySecret);
+	// Yup enforces that access key and secret are entered together before we
+	// reach this point; if both survived the mask filter, the user wants to
+	// rotate credentials.
 	const credentialsChanged = newAccessKey !== "" && newAccessKeySecret !== "";
 
 	const settings: AIProviderSettings = {

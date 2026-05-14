@@ -48,7 +48,7 @@ const providerNameErrorMessage =
  * server. Focusing the input clears it, so we never have to round-trip the
  * mask to the API.
  */
-const SAVED_CREDENTIAL_MASK = "********";
+export const SAVED_CREDENTIAL_MASK = "********";
 
 const defaultInitialValues: ProviderFormValues = {
 	type: "anthropic",
@@ -77,6 +77,15 @@ const makeOpenAiAnthropicSchema = (editing: boolean) =>
 		enabled: Yup.boolean(),
 	});
 
+// Treat the saved-credential mask as empty: a value matching the placeholder
+// should never be treated as a real, user-supplied credential during
+// validation.
+const credentialFilled = (value: string | undefined): boolean => {
+	if (!value) return false;
+	const trimmed = value.trim();
+	return trimmed !== "" && trimmed !== SAVED_CREDENTIAL_MASK;
+};
+
 const makeBedrockSchema = (editing: boolean) =>
 	Yup.object({
 		type: Yup.string()
@@ -95,12 +104,29 @@ const makeBedrockSchema = (editing: boolean) =>
 		apiKey: Yup.string(),
 		model: Yup.string().required("Model is required"),
 		smallFastModel: Yup.string().required("Small fast model is required"),
-		accessKey: editing
+		accessKey: (editing
 			? Yup.string()
-			: Yup.string().required("Access key is required"),
-		accessKeySecret: editing
+			: Yup.string().required("Access key is required")
+		).test(
+			"access-key-paired",
+			"Enter both access key and secret to rotate credentials.",
+			function (value) {
+				const secret = (this.parent as { accessKeySecret?: string })
+					.accessKeySecret;
+				return !(credentialFilled(secret) && !credentialFilled(value));
+			},
+		),
+		accessKeySecret: (editing
 			? Yup.string()
-			: Yup.string().required("Access key secret is required"),
+			: Yup.string().required("Access key secret is required")
+		).test(
+			"access-key-secret-paired",
+			"Enter both access key and secret to rotate credentials.",
+			function (value) {
+				const accessKey = (this.parent as { accessKey?: string }).accessKey;
+				return !(credentialFilled(accessKey) && !credentialFilled(value));
+			},
+		),
 		enabled: Yup.boolean(),
 	});
 
