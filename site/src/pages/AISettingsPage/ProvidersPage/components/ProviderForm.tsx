@@ -325,7 +325,7 @@ export const ProviderForm: FC<ProviderFormProps> = ({
 									}}
 								>
 									<TrashIcon />
-									<span>Reset keys</span>
+									<span>Clear keys</span>
 								</Button>
 							</div>
 						) : (
