@@ -14,6 +14,7 @@ import {
 	SelectValue,
 } from "#/components/Select/Select";
 import { Spinner } from "#/components/Spinner/Spinner";
+import { Switch } from "#/components/Switch/Switch";
 import { ProviderIcon } from "#/pages/AISettingsPage/ProvidersPage/components/ProviderIcon";
 import { cn } from "#/utils/cn";
 import { getFormHelpers } from "#/utils/formUtils";
@@ -27,6 +28,7 @@ export type ProviderFormValues = {
 	smallFastModel: string;
 	accessKey: string;
 	accessKeySecret: string;
+	enabled: boolean;
 };
 
 // Public AWS partition Bedrock Runtime API base URL, for example
@@ -43,6 +45,7 @@ const defaultInitialValues: ProviderFormValues = {
 	smallFastModel: "",
 	accessKey: "",
 	accessKeySecret: "",
+	enabled: false,
 };
 
 const openaiAnthropicSchema = Yup.object({
@@ -51,6 +54,7 @@ const openaiAnthropicSchema = Yup.object({
 		.required(),
 	name: Yup.string().required("Name is required"),
 	baseURL: Yup.string().required("Base URL is required"),
+	enabled: Yup.boolean(),
 });
 
 const bedrockSchema = Yup.object({
@@ -68,6 +72,7 @@ const bedrockSchema = Yup.object({
 	smallFastModel: Yup.string().required("Small fast model is required"),
 	accessKey: Yup.string().required("Access key is required"),
 	accessKeySecret: Yup.string().required("Access key secret is required"),
+	enabled: Yup.boolean(),
 });
 
 export const providerFormSchema = Yup.lazy(
@@ -102,6 +107,8 @@ export const ProviderForm: FC<ProviderFormProps> = ({
 	isLoading = false,
 }) => {
 	const typeSelectId = useId();
+	const enabledSwitchId = useId();
+
 	const form = useFormik<ProviderFormValues>({
 		initialValues: { ...defaultInitialValues, ...initialValues },
 		validationSchema: providerFormSchema,
@@ -232,6 +239,24 @@ export const ProviderForm: FC<ProviderFormProps> = ({
 						/>
 					</>
 				)}
+
+				<div className="flex items-center justify-between gap-4">
+					<div className="flex min-w-0 flex-1 flex-col gap-2">
+						<Label htmlFor={enabledSwitchId}>Enabled</Label>
+						<p className="m-0 text-xs text-content-secondary">
+							When disabled, this provider is not available for usage.
+						</p>
+					</div>
+					<Switch
+						id={enabledSwitchId}
+						checked={form.values.enabled}
+						onCheckedChange={(checked) => {
+							void form.setFieldValue("enabled", checked);
+						}}
+						disabled={isLoading}
+						aria-label="Provider enabled"
+					/>
+				</div>
 
 				<div className="flex justify-end gap-4">
 					<Link to="/aisettings">
