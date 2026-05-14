@@ -6,8 +6,7 @@ import ProvidersPageView from "#/pages/AISettingsPage/ProvidersPage/ProvidersPag
 
 const ProvidersPage: React.FC = () => {
 	const { permissions } = useAuthenticated();
-	// TODO: We need to scope this permission.
-	const hasPermission = permissions.viewAnyAIBridgeInterception;
+	const hasPermission = permissions.viewAnyAIProvider;
 
 	const providersQuery = useQuery(aiProvidersList());
 

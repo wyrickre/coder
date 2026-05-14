@@ -4,7 +4,7 @@ import UpdateProviderPageView from "./UpdateProviderPageView";
 
 const UpdateProviderPage: React.FC = () => {
 	const { permissions } = useAuthenticated();
-	const hasPermission = permissions.viewAnyAIBridgeInterception;
+	const hasPermission = permissions.viewAnyAIProvider;
 
 	return (
 		<RequirePermission isFeatureVisible={hasPermission}>

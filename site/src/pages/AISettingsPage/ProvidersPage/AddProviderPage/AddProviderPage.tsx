@@ -4,8 +4,7 @@ import AddProviderPageView from "./AddProviderPageView";
 
 const AddProviderPage: React.FC = () => {
 	const { permissions } = useAuthenticated();
-	// TODO: We need to scope this permission.
-	const hasPermission = permissions.viewAnyAIBridgeInterception;
+	const hasPermission = permissions.viewAnyAIProvider;
 
 	return (
 		<RequirePermission isFeatureVisible={hasPermission}>
