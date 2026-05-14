@@ -1,7 +1,7 @@
 import { useAuthenticated } from "#/hooks/useAuthenticated";
 import { RequirePermission } from "#/modules/permissions/RequirePermission";
-import { MOCK_READ_LIST_PROVIDERS } from "#/pages/AIGovernancePage/mock";
-import ProvidersPageView from "#/pages/AIGovernancePage/ProvidersPage/ProvidersPageView";
+import { MOCK_READ_LIST_PROVIDERS } from "#/pages/AISettingsPage/mock";
+import ProvidersPageView from "#/pages/AISettingsPage/ProvidersPage/ProvidersPageView";
 
 const ProvidersPage: React.FC = () => {
 	const { permissions } = useAuthenticated();

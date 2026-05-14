@@ -1,16 +1,17 @@
 import { useAuthenticated } from "#/hooks/useAuthenticated";
 import { RequirePermission } from "#/modules/permissions/RequirePermission";
-import UpdateProviderPageView from "#/pages/AIGovernancePage/UpdateProviderPage/UpdateProviderPageView";
+import AddProviderPageView from "#/pages/AISettingsPage/AddProviderPage/AddProviderPageView";
 
-const UpdateProviderPage: React.FC = () => {
+const AddProviderPage: React.FC = () => {
 	const { permissions } = useAuthenticated();
+	// TODO: We need to scope this permission.
 	const hasPermission = permissions.viewAnyAIBridgeInterception;
 
 	return (
 		<RequirePermission isFeatureVisible={hasPermission}>
-			<UpdateProviderPageView />
+			<AddProviderPageView />
 		</RequirePermission>
 	);
 };
 
-export default UpdateProviderPage;
+export default AddProviderPage;

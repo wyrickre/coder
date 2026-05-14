@@ -1,7 +1,6 @@
 import { PlusIcon } from "lucide-react";
 import { Link, useNavigate } from "react-router";
 import { Button } from "#/components/Button/Button";
-import { Margins } from "#/components/Margins/Margins";
 import {
 	PageHeader,
 	PageHeaderSubtitle,
@@ -16,8 +15,8 @@ import {
 } from "#/components/Table/Table";
 import { TableEmpty } from "#/components/TableEmpty/TableEmpty";
 import { TableLoader } from "#/components/TableLoader/TableLoader";
-import type { MOCK_READ_LIST_PROVIDERS } from "#/pages/AIGovernancePage/mock";
-import { ProviderRow } from "#/pages/AIGovernancePage/ProvidersPage/ProviderRow";
+import type { MOCK_READ_LIST_PROVIDERS } from "#/pages/AISettingsPage/mock";
+import { ProviderRow } from "#/pages/AISettingsPage/ProvidersPage/ProviderRow";
 
 interface ProvidersPageViewProps {
 	isLoading: boolean;
@@ -33,10 +32,11 @@ const ProvidersPageView: React.FC<ProvidersPageViewProps> = ({
 	const navigate = useNavigate();
 
 	return (
-		<Margins>
+		<>
 			<PageHeader
+				className="pt-4 pb-8"
 				actions={
-					<Link to="/aigovernance/add">
+					<Link to="/aisettings/add">
 						<Button>
 							<PlusIcon />
 							<span>Add provider</span>
@@ -68,13 +68,13 @@ const ProvidersPageView: React.FC<ProvidersPageViewProps> = ({
 							<ProviderRow
 								key={provider.name}
 								provider={provider}
-								onClick={() => navigate(`/aigovernance/${provider.name}`)}
+								onClick={() => navigate(`/aisettings/${provider.name}`)}
 							/>
 						))
 					)}
 				</TableBody>
 			</Table>
-		</Margins>
+		</>
 	);
 };
 

@@ -3,7 +3,7 @@ import { Avatar } from "#/components/Avatar/Avatar";
 import { AvatarData } from "#/components/Avatar/AvatarData";
 import { ExternalImage } from "#/components/ExternalImage/ExternalImage";
 import { TableCell, TableRow } from "#/components/Table/Table";
-import type { MOCK_READ_LIST_PROVIDERS } from "#/pages/AIGovernancePage/mock";
+import type { MOCK_READ_LIST_PROVIDERS } from "#/pages/AISettingsPage/mock";
 
 type ProviderRowProps = {
 	provider: (typeof MOCK_READ_LIST_PROVIDERS)[number];

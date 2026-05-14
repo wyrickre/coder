@@ -11,7 +11,7 @@ const AddProviderPageView: React.FC = () => {
 	return (
 		<>
 			<div className="pt-4 px-6">
-				<Link to="/aigovernance">
+				<Link to="/aisettings">
 					<Button variant="subtle">
 						<ArrowLeftIcon />
 						<span>Back to providers</span>
@@ -19,7 +19,7 @@ const AddProviderPageView: React.FC = () => {
 				</Link>
 			</div>
 			<div className="mx-auto w-full max-w-screen-sm">
-				<PageHeader className="py-0">
+				<PageHeader className="pt-6 pb-0">
 					<PageHeaderTitle>Add a provider</PageHeaderTitle>
 					<PageHeaderSubtitle>
 						Add a new provider to the AI governance system.

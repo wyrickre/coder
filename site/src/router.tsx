@@ -426,15 +426,17 @@ const AIBridgeSessionThreadsPage = lazy(
 	() => import("./pages/AIBridgePage/SessionThreadsPage/SessionThreadsPage"),
 );
 
-const AIGovernanceProvidersPage = lazy(
-	() => import("./pages/AIGovernancePage/ProvidersPage/ProvidersPage"),
+const AISettingsLayout = lazy(
+	() => import("./pages/AISettingsPage/AISettingsLayout"),
 );
-const AIGovernanceUpdateProviderPage = lazy(
-	() =>
-		import("./pages/AIGovernancePage/UpdateProviderPage/UpdateProviderPage"),
+const AISettingsProvidersPage = lazy(
+	() => import("./pages/AISettingsPage/ProvidersPage/ProvidersPage"),
 );
-const AIGovernanceAddProviderPage = lazy(
-	() => import("./pages/AIGovernancePage/AddProviderPage/AddProviderPage"),
+const AISettingsUpdateProviderPage = lazy(
+	() => import("./pages/AISettingsPage/UpdateProviderPage/UpdateProviderPage"),
+);
+const AISettingsAddProviderPage = lazy(
+	() => import("./pages/AISettingsPage/AddProviderPage/AddProviderPage"),
 );
 
 const GlobalLayout = () => {
@@ -686,13 +688,13 @@ export const router = createBrowserRouter(
 						<Route path=":sessionId" element={<AIBridgeSessionThreadsPage />} />
 					</Route>
 
-					<Route path="/aigovernance">
-						<Route index element={<AIGovernanceProvidersPage />} />
+					<Route path="/aisettings" element={<AISettingsLayout />}>
+						<Route index element={<AISettingsProvidersPage />} />
 						<Route
 							path=":providerId"
-							element={<AIGovernanceUpdateProviderPage />}
+							element={<AISettingsUpdateProviderPage />}
 						/>
-						<Route path="add" element={<AIGovernanceAddProviderPage />} />
+						<Route path="add" element={<AISettingsAddProviderPage />} />
 					</Route>
 
 					<Route path="/health" element={<HealthLayout />}>
