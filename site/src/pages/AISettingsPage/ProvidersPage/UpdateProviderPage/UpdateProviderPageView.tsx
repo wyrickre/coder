@@ -1,6 +1,6 @@
 import { ArrowLeftIcon } from "lucide-react";
 import { useMutation, useQuery, useQueryClient } from "react-query";
-import { Link, Navigate, useNavigate, useParams } from "react-router";
+import { Link, Navigate, useParams } from "react-router";
 import { toast } from "sonner";
 import { getErrorMessage } from "#/api/errors";
 import {
@@ -23,7 +23,6 @@ import {
 
 const UpdateProviderPageView: React.FC = () => {
 	const { providerId } = useParams<{ providerId: string }>();
-	const navigate = useNavigate();
 	const queryClient = useQueryClient();
 
 	const providersQuery = useQuery(aiProvidersList());
