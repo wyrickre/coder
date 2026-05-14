@@ -129,7 +129,7 @@ export const PersonalSkillEditor: FC<PersonalSkillEditorProps> = ({
 	const [importContent, setImportContent] = useState("");
 	const [importStatus, setImportStatus] = useState<ImportStatus | null>(null);
 
-	const importSkillMarkdown = (contentToImport: string) => {
+	const importSkillMarkdown = async (contentToImport: string) => {
 		if (!contentToImport.trim()) {
 			return;
 		}
@@ -145,15 +145,21 @@ export const PersonalSkillEditor: FC<PersonalSkillEditorProps> = ({
 		}
 
 		if (isCreate) {
-			void form.setValues(result.values);
-			void form.setTouched({ name: true, description: true, body: true });
+			await form.setValues(result.values);
+			await form.setTouched(
+				{ name: true, description: true, body: true },
+				false,
+			);
 		} else {
-			void form.setValues({
+			await form.setValues({
 				...form.values,
 				description: result.values.description,
 				body: result.values.body,
 			});
-			void form.setTouched({ name: false, description: true, body: true });
+			await form.setTouched(
+				{ name: false, description: true, body: true },
+				false,
+			);
 		}
 
 		setImportContent("");
@@ -184,7 +190,7 @@ export const PersonalSkillEditor: FC<PersonalSkillEditorProps> = ({
 		event.preventDefault();
 		setImportContent(pastedContent);
 		setImportStatus(null);
-		importSkillMarkdown(pastedContent);
+		void importSkillMarkdown(pastedContent);
 	};
 
 	const content = buildPersonalSkillMarkdown(form.values);
@@ -202,9 +208,12 @@ export const PersonalSkillEditor: FC<PersonalSkillEditorProps> = ({
 
 	return (
 		<Dialog open={open} onOpenChange={onOpenChange}>
-			<DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto">
-				<form className="flex flex-col gap-6" onSubmit={form.handleSubmit}>
-					<DialogHeader>
+			<DialogContent className="flex max-h-[90vh] max-w-2xl flex-col gap-0 overflow-hidden p-0">
+				<form
+					className="flex min-h-0 flex-1 flex-col"
+					onSubmit={form.handleSubmit}
+				>
+					<DialogHeader className="px-6 pt-6">
 						<DialogTitle>{title}</DialogTitle>
 						<DialogDescription>
 							Personal skills are available to your agents and stored as a
@@ -214,168 +223,172 @@ export const PersonalSkillEditor: FC<PersonalSkillEditorProps> = ({
 						</DialogDescription>
 					</DialogHeader>
 
-					{submitError && (
-						<Alert severity="error">
-							<AlertTitle>{submitError.message}</AlertTitle>
-							{submitError.detail && (
-								<AlertDescription>{submitError.detail}</AlertDescription>
-							)}
-						</Alert>
-					)}
-
-					<div className="flex flex-col gap-3 rounded-md border border-border-default p-4">
-						<div className="flex flex-col gap-1">
-							<Label htmlFor="personal-skill-import">
-								Import from SKILL.md
-							</Label>
-							<p className="m-0 text-xs text-content-secondary">
-								Paste a full SKILL.md file with frontmatter to auto-fill the
-								fields below.
-							</p>
-						</div>
-						<TextareaAutosize
-							id="personal-skill-import"
-							value={importContent}
-							onChange={handleImportContentChange}
-							onPaste={handleImportContentPaste}
-							placeholder="---\nname: my-skill\ndescription: ...\n---\n\nBody..."
-							disabled={isSubmitting}
-							minRows={4}
-							maxRows={10}
-							className="w-full resize-y rounded-md border border-border bg-transparent px-3 py-2 font-mono text-sm leading-relaxed text-content-primary placeholder:text-content-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-content-link disabled:cursor-not-allowed disabled:opacity-50"
-						/>
-						{importStatus && (
-							<Alert severity={importStatus.kind}>
-								<AlertTitle>{importStatus.title}</AlertTitle>
-								{importStatus.detail && (
-									<AlertDescription>{importStatus.detail}</AlertDescription>
+					<div className="flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto px-6 py-4">
+						{submitError && (
+							<Alert severity="error">
+								<AlertTitle>{submitError.message}</AlertTitle>
+								{submitError.detail && (
+									<AlertDescription>{submitError.detail}</AlertDescription>
 								)}
 							</Alert>
 						)}
-						<div className="flex justify-end gap-2">
-							{importContent && (
+
+						<div className="flex flex-col gap-3 rounded-md border border-border-default p-4">
+							<div className="flex flex-col gap-1">
+								<Label htmlFor="personal-skill-import">
+									Import from SKILL.md
+								</Label>
+								<p className="m-0 text-xs text-content-secondary">
+									Paste a full SKILL.md file with frontmatter to auto-fill the
+									fields below.
+								</p>
+							</div>
+							<TextareaAutosize
+								id="personal-skill-import"
+								value={importContent}
+								onChange={handleImportContentChange}
+								onPaste={handleImportContentPaste}
+								placeholder="---\nname: my-skill\ndescription: ...\n---\n\nBody..."
+								disabled={isSubmitting}
+								minRows={4}
+								maxRows={10}
+								className="w-full resize-y rounded-md border border-border bg-transparent px-3 py-2 font-mono text-sm leading-relaxed text-content-primary placeholder:text-content-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-content-link disabled:cursor-not-allowed disabled:opacity-50"
+							/>
+							{importStatus && (
+								<Alert severity={importStatus.kind}>
+									<AlertTitle>{importStatus.title}</AlertTitle>
+									{importStatus.detail && (
+										<AlertDescription>{importStatus.detail}</AlertDescription>
+									)}
+								</Alert>
+							)}
+							<div className="flex justify-end gap-2">
+								{importContent && (
+									<Button
+										variant="outline"
+										size="sm"
+										disabled={isSubmitting}
+										onClick={() => {
+											setImportContent("");
+											setImportStatus(null);
+										}}
+									>
+										Clear
+									</Button>
+								)}
 								<Button
-									variant="outline"
 									size="sm"
-									disabled={isSubmitting}
+									disabled={isSubmitting || !importContent.trim()}
 									onClick={() => {
-										setImportContent("");
-										setImportStatus(null);
+										void importSkillMarkdown(importContent);
 									}}
 								>
-									Clear
+									Import
 								</Button>
+							</div>
+						</div>
+						<div className="flex flex-col gap-2">
+							<Label htmlFor="personal-skill-name">Name</Label>
+							<Input
+								id="personal-skill-name"
+								name="name"
+								value={form.values.name}
+								onChange={form.handleChange}
+								onBlur={form.handleBlur}
+								placeholder="review-database-query"
+								readOnly={!isCreate}
+								disabled={isSubmitting}
+								aria-invalid={Boolean(nameError)}
+								aria-describedby={
+									nameError ? "personal-skill-name-error" : undefined
+								}
+								className={cn(!isCreate && "bg-surface-secondary")}
+							/>
+							{nameError ? (
+								<p
+									id="personal-skill-name-error"
+									className="m-0 text-xs text-content-destructive"
+								>
+									{nameError}
+								</p>
+							) : (
+								<p className="m-0 text-xs text-content-secondary">
+									Use lowercase letters, numbers, and hyphens. Names cannot be
+									changed after creation.
+								</p>
 							)}
-							<Button
-								size="sm"
-								disabled={isSubmitting || !importContent.trim()}
-								onClick={() => importSkillMarkdown(importContent)}
+						</div>
+
+						<div className="flex flex-col gap-2">
+							<Label htmlFor="personal-skill-description">Description</Label>
+							<Input
+								id="personal-skill-description"
+								name="description"
+								value={form.values.description}
+								onChange={form.handleChange}
+								onBlur={form.handleBlur}
+								placeholder="When to use this skill"
+								disabled={isSubmitting}
+								aria-invalid={Boolean(descriptionError)}
+								aria-describedby={
+									descriptionError
+										? "personal-skill-description-error"
+										: undefined
+								}
+							/>
+							{descriptionError && (
+								<p
+									id="personal-skill-description-error"
+									className="m-0 text-xs text-content-destructive"
+								>
+									{descriptionError}
+								</p>
+							)}
+						</div>
+
+						<div className="flex flex-col gap-2">
+							<Label htmlFor="personal-skill-body">Body</Label>
+							<TextareaAutosize
+								id="personal-skill-body"
+								name="body"
+								value={form.values.body}
+								onChange={form.handleChange}
+								onBlur={form.handleBlur}
+								placeholder="Describe when and how agents should use this skill."
+								disabled={isSubmitting}
+								minRows={8}
+								aria-invalid={Boolean(bodyError)}
+								aria-describedby={
+									bodyError ? "personal-skill-body-error" : undefined
+								}
+								className={cn(
+									"w-full resize-y rounded-md border border-border bg-transparent px-3 py-2 font-mono text-sm leading-relaxed text-content-primary placeholder:text-content-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-content-link disabled:cursor-not-allowed disabled:opacity-50",
+									bodyError && "border-border-destructive",
+								)}
+							/>
+							{bodyError && (
+								<p
+									id="personal-skill-body-error"
+									className="m-0 text-xs text-content-destructive"
+								>
+									{bodyError}
+								</p>
+							)}
+							<p
+								className={cn(
+									"m-0 text-xs text-content-secondary",
+									isNearLimit && "text-content-warning",
+									isTooLarge && "text-content-destructive",
+								)}
 							>
-								Import
-							</Button>
+								{formatSize(sizeBytes)} of{" "}
+								{formatSize(PERSONAL_SKILL_MAX_SIZE_BYTES)}
+								used.
+							</p>
 						</div>
 					</div>
-					<div className="flex flex-col gap-2">
-						<Label htmlFor="personal-skill-name">Name</Label>
-						<Input
-							id="personal-skill-name"
-							name="name"
-							value={form.values.name}
-							onChange={form.handleChange}
-							onBlur={form.handleBlur}
-							placeholder="review-database-query"
-							readOnly={!isCreate}
-							disabled={isSubmitting}
-							aria-invalid={Boolean(nameError)}
-							aria-describedby={
-								nameError ? "personal-skill-name-error" : undefined
-							}
-							className={cn(!isCreate && "bg-surface-secondary")}
-						/>
-						{nameError ? (
-							<p
-								id="personal-skill-name-error"
-								className="m-0 text-xs text-content-destructive"
-							>
-								{nameError}
-							</p>
-						) : (
-							<p className="m-0 text-xs text-content-secondary">
-								Use lowercase letters, numbers, and hyphens. Names cannot be
-								changed after creation.
-							</p>
-						)}
-					</div>
 
-					<div className="flex flex-col gap-2">
-						<Label htmlFor="personal-skill-description">Description</Label>
-						<Input
-							id="personal-skill-description"
-							name="description"
-							value={form.values.description}
-							onChange={form.handleChange}
-							onBlur={form.handleBlur}
-							placeholder="When to use this skill"
-							disabled={isSubmitting}
-							aria-invalid={Boolean(descriptionError)}
-							aria-describedby={
-								descriptionError
-									? "personal-skill-description-error"
-									: undefined
-							}
-						/>
-						{descriptionError && (
-							<p
-								id="personal-skill-description-error"
-								className="m-0 text-xs text-content-destructive"
-							>
-								{descriptionError}
-							</p>
-						)}
-					</div>
-
-					<div className="flex flex-col gap-2">
-						<Label htmlFor="personal-skill-body">Body</Label>
-						<TextareaAutosize
-							id="personal-skill-body"
-							name="body"
-							value={form.values.body}
-							onChange={form.handleChange}
-							onBlur={form.handleBlur}
-							placeholder="Describe when and how agents should use this skill."
-							disabled={isSubmitting}
-							minRows={8}
-							aria-invalid={Boolean(bodyError)}
-							aria-describedby={
-								bodyError ? "personal-skill-body-error" : undefined
-							}
-							className={cn(
-								"w-full resize-y rounded-md border border-border bg-transparent px-3 py-2 font-mono text-sm leading-relaxed text-content-primary placeholder:text-content-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-content-link disabled:cursor-not-allowed disabled:opacity-50",
-								bodyError && "border-border-destructive",
-							)}
-						/>
-						{bodyError && (
-							<p
-								id="personal-skill-body-error"
-								className="m-0 text-xs text-content-destructive"
-							>
-								{bodyError}
-							</p>
-						)}
-						<p
-							className={cn(
-								"m-0 text-xs text-content-secondary",
-								isNearLimit && "text-content-warning",
-								isTooLarge && "text-content-destructive",
-							)}
-						>
-							{formatSize(sizeBytes)} of{" "}
-							{formatSize(PERSONAL_SKILL_MAX_SIZE_BYTES)}
-							used.
-						</p>
-					</div>
-
-					<DialogFooter>
+					<DialogFooter className="border-t border-border-default px-6 py-4">
 						<Button
 							variant="outline"
 							disabled={isSubmitting}
