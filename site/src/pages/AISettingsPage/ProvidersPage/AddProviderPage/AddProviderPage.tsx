@@ -1,6 +1,6 @@
 import { useAuthenticated } from "#/hooks/useAuthenticated";
 import { RequirePermission } from "#/modules/permissions/RequirePermission";
-import AddProviderPageView from "#/pages/AISettingsPage/AddProviderPage/AddProviderPageView";
+import AddProviderPageView from "./AddProviderPageView";
 
 const AddProviderPage: React.FC = () => {
 	const { permissions } = useAuthenticated();

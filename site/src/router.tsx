@@ -433,10 +433,16 @@ const AISettingsProvidersPage = lazy(
 	() => import("./pages/AISettingsPage/ProvidersPage/ProvidersPage"),
 );
 const AISettingsUpdateProviderPage = lazy(
-	() => import("./pages/AISettingsPage/UpdateProviderPage/UpdateProviderPage"),
+	() =>
+		import(
+			"./pages/AISettingsPage/ProvidersPage/UpdateProviderPage/UpdateProviderPage"
+		),
 );
 const AISettingsAddProviderPage = lazy(
-	() => import("./pages/AISettingsPage/AddProviderPage/AddProviderPage"),
+	() =>
+		import(
+			"./pages/AISettingsPage/ProvidersPage/AddProviderPage/AddProviderPage"
+		),
 );
 
 const GlobalLayout = () => {

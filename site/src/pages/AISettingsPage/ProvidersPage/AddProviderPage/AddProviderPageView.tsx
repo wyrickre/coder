@@ -6,6 +6,7 @@ import {
 	PageHeaderSubtitle,
 	PageHeaderTitle,
 } from "#/components/PageHeader/PageHeader";
+import { ProviderForm } from "../components/ProviderForm";
 
 const AddProviderPageView: React.FC = () => {
 	return (
@@ -18,13 +19,18 @@ const AddProviderPageView: React.FC = () => {
 					</Button>
 				</Link>
 			</div>
-			<div className="mx-auto w-full max-w-screen-sm">
+			<div className="mx-auto w-full max-w-screen-sm flex flex-col gap-6">
 				<PageHeader className="pt-6 pb-0">
 					<PageHeaderTitle>Add a provider</PageHeaderTitle>
 					<PageHeaderSubtitle>
-						Add a new provider to the AI governance system.
+						Connect third-party LLM services like OpenAI, Anthropic, or Google.
+						Each provider supplies models that users can select for their
+						conversations.
 					</PageHeaderSubtitle>
 				</PageHeader>
+				<div className="border border-solid p-6 rounded-lg">
+					<ProviderForm editing={false} />
+				</div>
 			</div>
 		</>
 	);

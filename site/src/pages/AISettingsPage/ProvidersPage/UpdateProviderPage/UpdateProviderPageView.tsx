@@ -5,6 +5,7 @@ import {
 	PageHeader,
 	PageHeaderTitle,
 } from "#/components/PageHeader/PageHeader";
+import { ProviderForm } from "#/pages/AISettingsPage/ProvidersPage/components/ProviderForm";
 
 const UpdateProviderPageView: React.FC = () => {
 	return (
@@ -17,10 +18,13 @@ const UpdateProviderPageView: React.FC = () => {
 					</Button>
 				</Link>
 			</div>
-			<div className="mx-auto w-full max-w-screen-sm">
+			<div className="mx-auto w-full max-w-screen-sm flex flex-col gap-6">
 				<PageHeader className="pt-6 pb-0">
 					<PageHeaderTitle>Update a provider</PageHeaderTitle>
 				</PageHeader>
+				<div className="border border-solid p-6 rounded-lg">
+					<ProviderForm editing={true} />
+				</div>
 			</div>
 		</>
 	);

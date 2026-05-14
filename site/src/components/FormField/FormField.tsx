@@ -7,11 +7,13 @@ import type { FormHelpers } from "#/utils/formUtils";
 type FormFieldProps = React.ComponentPropsWithRef<"input"> & {
 	field: FormHelpers;
 	label: ReactNode;
+	description?: ReactNode;
 };
 
 export const FormField: FC<FormFieldProps> = ({
 	field,
 	label,
+	description,
 	className,
 	...inputProps
 }) => {
@@ -23,6 +25,9 @@ export const FormField: FC<FormFieldProps> = ({
 	return (
 		<div className="flex flex-col gap-2">
 			<Label htmlFor={id}>{label}</Label>
+			{description && (
+				<div className="text-xs text-content-secondary">{description}</div>
+			)}
 			<Input
 				name={field.name}
 				value={field.value}
