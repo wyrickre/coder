@@ -6,9 +6,9 @@ import {
 	type UpdateAIProviderRequest,
 } from "#/api/api";
 
-export const aiProvidersListKey = ["ai", "providers"] as const;
+const aiProvidersListKey = ["ai", "providers"] as const;
 
-export const aiProviderKey = (providerName: string) =>
+const aiProviderKey = (providerName: string) =>
 	[...aiProvidersListKey, providerName] as const;
 
 export const aiProvidersList = () => ({

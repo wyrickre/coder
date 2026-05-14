@@ -113,7 +113,7 @@ const makeBedrockSchema = (editing: boolean) => {
 	);
 };
 
-export const getProviderFormSchema = (editing: boolean) =>
+const getProviderFormSchema = (editing: boolean) =>
 	Yup.lazy((value: { type?: string } | undefined) => {
 		switch (value?.type) {
 			case "openai":
@@ -129,9 +129,6 @@ export const getProviderFormSchema = (editing: boolean) =>
 				});
 		}
 	});
-
-/** Schema for add-provider flow (Bedrock access fields required). */
-export const providerFormSchema = getProviderFormSchema(false);
 
 type ProviderFormProps = {
 	editing?: boolean;

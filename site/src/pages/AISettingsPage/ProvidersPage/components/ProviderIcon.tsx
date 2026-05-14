@@ -15,7 +15,7 @@ export const getProviderIcon = (provider: string) => {
 	}
 };
 
-export const getProviderName = (provider: string) => {
+const getProviderName = (provider: string) => {
 	switch (provider) {
 		case "openai":
 			return "OpenAI";

@@ -3118,7 +3118,7 @@ class ApiMethods {
 }
 
 /** Bedrock-specific settings payload for AI governance providers. */
-export type AIProviderBedrockSettings = {
+type AIProviderBedrockSettings = {
 	readonly _type: "bedrock";
 	readonly _version: string;
 	readonly model: string;
