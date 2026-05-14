@@ -16,7 +16,7 @@ import {
 import { TableEmpty } from "#/components/TableEmpty/TableEmpty";
 import { TableLoader } from "#/components/TableLoader/TableLoader";
 import type { MOCK_READ_LIST_PROVIDERS } from "#/pages/AISettingsPage/mock";
-import { ProviderRow } from "#/pages/AISettingsPage/ProvidersPage/ProviderRow";
+import { ProviderRow } from "#/pages/AISettingsPage/ProvidersPage/components/ProviderRow";
 
 interface ProvidersPageViewProps {
 	isLoading: boolean;
