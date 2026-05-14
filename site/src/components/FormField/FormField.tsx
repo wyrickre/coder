@@ -21,12 +21,21 @@ export const FormField: FC<FormFieldProps> = ({
 	const id = inputProps.id ?? generatedId;
 	const errorId = `${id}-error`;
 	const helperId = `${id}-helper`;
+	const descriptionId = `${id}-description`;
+	const describedBy = [
+		description ? descriptionId : null,
+		field.error ? errorId : field.helperText ? helperId : null,
+	]
+		.filter(Boolean)
+		.join(" ");
 
 	return (
 		<div className="flex flex-col gap-2">
 			<Label htmlFor={id}>{label}</Label>
 			{description && (
-				<div className="text-xs text-content-secondary">{description}</div>
+				<div id={descriptionId} className="text-xs text-content-secondary">
+					{description}
+				</div>
 			)}
 			<Input
 				name={field.name}
@@ -36,9 +45,7 @@ export const FormField: FC<FormFieldProps> = ({
 				{...inputProps}
 				id={id}
 				aria-invalid={field.error}
-				aria-describedby={
-					field.error ? errorId : field.helperText ? helperId : undefined
-				}
+				aria-describedby={describedBy || undefined}
 				className={cn(field.error && "border-border-destructive", className)}
 			/>
 			{field.error ? (

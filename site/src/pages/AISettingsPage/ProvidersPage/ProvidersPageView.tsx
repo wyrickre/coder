@@ -51,7 +51,7 @@ const ProvidersPageView: React.FC<ProvidersPageViewProps> = ({
 					conversations.
 				</PageHeaderSubtitle>
 			</PageHeader>
-			<Table className="table-fixed">
+			<Table className="table-fixed" aria-label="AI providers">
 				<TableHeader>
 					<TableRow>
 						<TableHead>Name</TableHead>

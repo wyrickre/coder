@@ -3,6 +3,7 @@ import type { AIProvider } from "#/api/typesGenerated";
 import { Avatar } from "#/components/Avatar/Avatar";
 import { AvatarData } from "#/components/Avatar/AvatarData";
 import { TableCell, TableRow } from "#/components/Table/Table";
+import { useClickableTableRow } from "#/hooks/useClickableTableRow";
 import { ProviderIcon } from "./ProviderIcon";
 
 type ProviderRowProps = {
@@ -14,13 +15,11 @@ export const ProviderRow: React.FC<ProviderRowProps> = ({
 	provider,
 	onClick,
 }) => {
+	const clickableProps = useClickableTableRow({
+		onClick: () => onClick?.(),
+	});
 	return (
-		<TableRow
-			key={provider.name}
-			hover
-			className="cursor-pointer"
-			onClick={() => onClick?.()}
-		>
+		<TableRow key={provider.name} {...clickableProps}>
 			<TableCell>
 				<AvatarData
 					title={provider.display_name}
