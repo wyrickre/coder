@@ -11,7 +11,6 @@ import (
 	"charm.land/fantasy"
 	"golang.org/x/xerrors"
 
-	"cdr.dev/slog/v3"
 	skillspkg "github.com/coder/coder/v2/coderd/x/skills"
 	"github.com/coder/coder/v2/codersdk/workspacesdk"
 )
@@ -19,6 +18,11 @@ import (
 const (
 	maxSkillMetaBytes = workspacesdk.MaxSkillMetaBytes
 	maxSkillFileBytes = 512 * 1024
+
+	// AvailableSkillsOpenTag is the XML start tag for the skill index block.
+	AvailableSkillsOpenTag = "<available-skills>"
+	// AvailableSkillsCloseTag is the XML end tag for the skill index block.
+	AvailableSkillsCloseTag = "</available-skills>"
 )
 
 // SkillMeta is the frontmatter from a skill meta file discovered in a
@@ -91,7 +95,7 @@ func renderSkillIndex(entries []skillIndexEntry, opts skillIndexFormatOptions) s
 	}
 
 	var b strings.Builder
-	_, _ = b.WriteString("<available-skills>\n")
+	_, _ = b.WriteString(AvailableSkillsOpenTag + "\n")
 	_, _ = b.WriteString(
 		"Use read_skill to load a skill's full instructions " +
 			"before following them.\n",
@@ -118,7 +122,7 @@ func renderSkillIndex(entries []skillIndexEntry, opts skillIndexFormatOptions) s
 		}
 		_, _ = b.WriteString("\n")
 	}
-	_, _ = b.WriteString("</available-skills>")
+	_, _ = b.WriteString(AvailableSkillsCloseTag)
 	return b.String()
 }
 
@@ -262,11 +266,14 @@ const DefaultSkillMetaFile = "SKILL.md"
 // ReadSkillOptions configures the read_skill and read_skill_file
 // tools.
 type ReadSkillOptions struct {
+	// GetWorkspaceConn returns the active workspace connection for workspace skill reads.
 	GetWorkspaceConn func(context.Context) (workspacesdk.AgentConn, error)
-	GetSkills        func() []SkillMeta
+	// GetSkills returns the currently available workspace skills.
+	GetSkills func() []SkillMeta
 
-	Logger                slog.Logger
-	ResolveAlias          func(string) (skillspkg.ResolvedSkill, error)
+	// ResolveAlias maps a requested skill alias to its canonical skill and source.
+	ResolveAlias func(string) (skillspkg.ResolvedSkill, error)
+	// LoadPersonalSkillBody loads the parsed body for a canonical personal skill name.
 	LoadPersonalSkillBody func(context.Context, string) (skillspkg.ParsedSkill, error)
 }
 
@@ -294,7 +301,12 @@ func ReadSkill(options ReadSkillOptions) fantasy.AgentTool {
 
 			resolved, err := resolveSkillAlias(options, args.Name)
 			if err != nil {
-				return skillNotFoundResponse(args.Name), nil
+				if xerrors.Is(err, skillspkg.ErrSkillNotFound) {
+					return skillNotFoundResponse(args.Name), nil
+				}
+				return fantasy.NewTextErrorResponse(
+					fmt.Sprintf("failed to resolve skill %q", args.Name),
+				), nil
 			}
 
 			switch resolved.Source {
@@ -309,11 +321,9 @@ func ReadSkill(options ReadSkillOptions) fantasy.AgentTool {
 					if xerrors.Is(err, skillspkg.ErrSkillNotFound) {
 						return skillNotFoundResponse(args.Name), nil
 					}
-					options.Logger.Error(ctx, "failed to load personal skill",
-						slog.F("name", resolved.Name),
-						slog.Error(err),
-					)
-					return fantasy.NewTextErrorResponse("failed to load personal skill"), nil
+					return fantasy.NewTextErrorResponse(
+						fmt.Sprintf("failed to load personal skill %q", args.Name),
+					), nil
 				}
 				return toolResponse(map[string]any{
 					"name":  args.Name,
@@ -328,7 +338,7 @@ func ReadSkill(options ReadSkillOptions) fantasy.AgentTool {
 				return toolResponse(map[string]any{
 					"name":  args.Name,
 					"body":  content.Body,
-					"files": content.Files,
+					"files": nonNilFiles(content.Files),
 				}), nil
 			default:
 				return skillNotFoundResponse(args.Name), nil
@@ -365,7 +375,12 @@ func ReadSkillFile(options ReadSkillOptions) fantasy.AgentTool {
 
 			resolved, err := resolveSkillAlias(options, args.Name)
 			if err != nil {
-				return skillNotFoundResponse(args.Name), nil
+				if xerrors.Is(err, skillspkg.ErrSkillNotFound) {
+					return skillNotFoundResponse(args.Name), nil
+				}
+				return fantasy.NewTextErrorResponse(
+					fmt.Sprintf("failed to resolve skill %q", args.Name),
+				), nil
 			}
 			if resolved.Source == skillspkg.SourcePersonal {
 				return fantasy.NewTextErrorResponse(
@@ -419,11 +434,7 @@ func ReadSkillFile(options ReadSkillOptions) fantasy.AgentTool {
 
 func resolveSkillAlias(options ReadSkillOptions, name string) (skillspkg.ResolvedSkill, error) {
 	if options.ResolveAlias != nil {
-		resolved, err := options.ResolveAlias(name)
-		if err != nil {
-			return skillspkg.ResolvedSkill{}, err
-		}
-		return resolved, nil
+		return options.ResolveAlias(name)
 	}
 
 	skill, ok := findSkill(options.GetSkills, name)
@@ -476,6 +487,13 @@ func skillNotFoundResponse(name string) fantasy.ToolResponse {
 	return fantasy.NewTextErrorResponse(
 		fmt.Sprintf("skill %q not found", name),
 	)
+}
+
+func nonNilFiles(files []string) []string {
+	if files == nil {
+		return []string{}
+	}
+	return files
 }
 
 // findSkill looks up a skill by name in the current skill list.

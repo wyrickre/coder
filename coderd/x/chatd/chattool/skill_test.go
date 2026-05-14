@@ -13,12 +13,10 @@ import (
 	"go.uber.org/mock/gomock"
 	"golang.org/x/xerrors"
 
-	"cdr.dev/slog/v3"
 	"github.com/coder/coder/v2/coderd/x/chatd/chattool"
 	skillspkg "github.com/coder/coder/v2/coderd/x/skills"
 	"github.com/coder/coder/v2/codersdk/workspacesdk"
 	"github.com/coder/coder/v2/codersdk/workspacesdk/agentconnmock"
-	"github.com/coder/coder/v2/testutil"
 )
 
 // validSkillMD returns a valid SKILL.md with the given name and
@@ -610,9 +608,7 @@ func TestReadSkillTool(t *testing.T) {
 	t.Run("PersonalSkillLoaderErrorIsSanitized", func(t *testing.T) {
 		t.Parallel()
 
-		sink := testutil.NewFakeSink(t)
 		tool := chattool.ReadSkill(chattool.ReadSkillOptions{
-			Logger: sink.Logger(),
 			ResolveAlias: func(alias string) (skillspkg.ResolvedSkill, error) {
 				return skillspkg.ResolvedSkill{
 					Skill: skillspkg.Skill{Name: alias, Source: skillspkg.SourcePersonal},
@@ -632,12 +628,29 @@ func TestReadSkillTool(t *testing.T) {
 
 		require.NoError(t, err)
 		assert.True(t, resp.IsError)
-		assert.Contains(t, resp.Content, "failed to load personal skill")
+		assert.Contains(t, resp.Content, `failed to load personal skill "my-skill"`)
 		assert.NotContains(t, resp.Content, "synthetic private storage failure")
-		entries := sink.Entries(func(e slog.SinkEntry) bool {
-			return e.Level == slog.LevelError && e.Message == "failed to load personal skill"
+	})
+
+	t.Run("ResolveAliasErrorIsSanitized", func(t *testing.T) {
+		t.Parallel()
+
+		tool := chattool.ReadSkill(chattool.ReadSkillOptions{
+			ResolveAlias: func(string) (skillspkg.ResolvedSkill, error) {
+				return skillspkg.ResolvedSkill{}, xerrors.New("synthetic private resolver failure")
+			},
 		})
-		require.Len(t, entries, 1)
+
+		resp, err := tool.Run(context.Background(), fantasy.ToolCall{
+			ID:    "call-1",
+			Name:  "read_skill",
+			Input: `{"name":"my-skill"}`,
+		})
+
+		require.NoError(t, err)
+		assert.True(t, resp.IsError)
+		assert.Contains(t, resp.Content, `failed to resolve skill "my-skill"`)
+		assert.NotContains(t, resp.Content, "synthetic private resolver failure")
 	})
 
 	t.Run("UnknownSkill", func(t *testing.T) {
