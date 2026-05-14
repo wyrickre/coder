@@ -1,5 +1,29 @@
+import { ArrowLeftIcon } from "lucide-react";
+import { Link } from "react-router";
+import { Button } from "#/components/Button/Button";
+import {
+	PageHeader,
+	PageHeaderTitle,
+} from "#/components/PageHeader/PageHeader";
+
 const UpdateProviderPageView: React.FC = () => {
-	return <h1>Update Provider</h1>;
+	return (
+		<>
+			<div className="pt-4 px-6">
+				<Link to="/aigovernance">
+					<Button variant="subtle">
+						<ArrowLeftIcon />
+						<span>Back to providers</span>
+					</Button>
+				</Link>
+			</div>
+			<div className="mx-auto w-full max-w-screen-sm">
+				<PageHeader className="py-0">
+					<PageHeaderTitle>Update a provider</PageHeaderTitle>
+				</PageHeader>
+			</div>
+		</>
+	);
 };
 
 export default UpdateProviderPageView;

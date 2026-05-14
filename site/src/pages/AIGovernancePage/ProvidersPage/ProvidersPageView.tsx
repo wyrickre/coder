@@ -1,5 +1,5 @@
 import { PlusIcon } from "lucide-react";
-import { useNavigate } from "react-router";
+import { Link, useNavigate } from "react-router";
 import { Button } from "#/components/Button/Button";
 import { Margins } from "#/components/Margins/Margins";
 import {
@@ -36,10 +36,12 @@ const ProvidersPageView: React.FC<ProvidersPageViewProps> = ({
 		<Margins>
 			<PageHeader
 				actions={
-					<Button>
-						<PlusIcon />
-						<span>Add Provider</span>
-					</Button>
+					<Link to="/aigovernance/add">
+						<Button>
+							<PlusIcon />
+							<span>Add provider</span>
+						</Button>
+					</Link>
 				}
 			>
 				<PageHeaderTitle>Providers</PageHeaderTitle>
