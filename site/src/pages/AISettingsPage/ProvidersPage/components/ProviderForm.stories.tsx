@@ -21,7 +21,7 @@ export const AddOpenAI: Story = {
 	args: {
 		initialValues: {
 			type: "openai",
-			name: "Corporate OpenAI",
+			name: "corporate-openai",
 			baseUrl: "https://api.openai.com/v1",
 			apiKey: "sk-example",
 			enabled: true,
@@ -33,6 +33,7 @@ export const AddBedrock: Story = {
 	args: {
 		initialValues: {
 			type: "bedrock",
+			name: "bedrock-prod",
 			baseUrl: "https://bedrock-runtime.us-east-1.amazonaws.com",
 			model: "anthropic.claude-3-5-sonnet-20241022-v2:0",
 			smallFastModel: "anthropic.claude-3-5-haiku-20241022-v1:0",
@@ -63,7 +64,6 @@ export const EditBedrockKeepCredentials: Story = {
 export const EditProvider: Story = {
 	args: {
 		editing: true,
-		openAiAnthropicSavedApiKey: true,
 		initialValues: {
 			type: "anthropic",
 			name: "production-anthropic",

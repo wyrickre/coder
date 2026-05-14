@@ -23,8 +23,7 @@ import { getProviderIcon } from "../components/ProviderIcon";
 import {
 	aiProviderToFormValues,
 	hasBedrockStoredCredentials,
-	hasOpenAiAnthropicStoredApiKey,
-	providerFormValuesToRequest,
+	providerFormValuesToUpdate,
 } from "../components/providerFormApiMap";
 
 const UpdateProviderPageView: React.FC = () => {
@@ -124,15 +123,12 @@ const UpdateProviderPageView: React.FC = () => {
 						bedrockSavedAccessCredentials={hasBedrockStoredCredentials(
 							provider,
 						)}
-						openAiAnthropicSavedApiKey={hasOpenAiAnthropicStoredApiKey(
-							provider,
-						)}
 						initialValues={aiProviderToFormValues(provider)}
 						isLoading={updateMutation.isPending}
 						submitError={updateMutation.error}
 						onSubmit={(values) => {
 							updateMutation.mutate(
-								providerFormValuesToRequest(values, provider),
+								providerFormValuesToUpdate(values, provider),
 								{
 									onSuccess: () => {
 										toast.success(`Provider "${provider.name}" updated.`);

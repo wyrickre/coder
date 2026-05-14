@@ -1,115 +1,147 @@
-import type { AIProvider, CreateAIProviderRequest } from "#/api/api";
+import type {
+	AIProvider,
+	AIProviderSettings,
+	CreateAIProviderRequest,
+	UpdateAIProviderRequest,
+} from "#/api/typesGenerated";
 import type { ProviderFormValues } from "./ProviderForm";
 
-/** Bedrock row has any non-empty access key or secret from the API. */
-export function hasBedrockStoredCredentials(provider: AIProvider): boolean {
-	if (provider.type !== "bedrock" || !provider.settings) {
+/**
+ * The wire API only knows about `openai` and `anthropic`; AWS Bedrock is a
+ * Bedrock-specific configuration of an Anthropic provider, recognized by the
+ * presence of `bedrock_*` fields on Settings.
+ */
+const isBedrockProvider = (provider: AIProvider): boolean => {
+	if (provider.type !== "anthropic") {
 		return false;
 	}
 	const s = provider.settings;
-	const ak = s.access_keys?.[0]?.trim() ?? "";
-	const sk = s.access_key_secrets?.[0]?.trim() ?? "";
-	return ak !== "" || sk !== "";
-}
+	return Boolean(
+		s.bedrock_region || s.bedrock_model || s.bedrock_small_fast_model,
+	);
+};
 
-/** OpenAI or Anthropic row has a non-empty API key from the API. */
-export function hasOpenAiAnthropicStoredApiKey(provider: AIProvider): boolean {
-	if (provider.type !== "openai" && provider.type !== "anthropic") {
+/** Bedrock has stored credentials on the server. */
+export const hasBedrockStoredCredentials = (provider: AIProvider): boolean => {
+	if (!isBedrockProvider(provider)) {
 		return false;
 	}
-	const keys = provider.api_keys ?? provider.api_key ?? [];
-	return Boolean(keys[0]?.trim());
-}
+	// Bedrock secret fields are write-only and never present in responses, so
+	// we can't observe the values directly. The server only persists Bedrock
+	// settings if credentials were supplied, so the presence of a Bedrock
+	// configuration implies credentials are on file.
+	return true;
+};
 
 /**
- * Convert form values into a create/update request.
- *
- * For credential fields, an empty string means "keep the existing value on the
- * server" (we never echo the saved value back through the form), while a
- * non-empty string is treated as a replacement.
+ * Input to the create mutation. `apiKey` is only used for openai/anthropic
+ * providers; Bedrock providers carry their AWS credentials in
+ * `request.settings`. The caller is responsible for chaining
+ * `POST /providers/{id}/keys` after the provider is created.
  */
-export function providerFormValuesToRequest(
+type ProviderCreatePayload = {
+	request: CreateAIProviderRequest;
+	apiKey?: string;
+};
+
+/**
+ * Build a create request from form values. For Bedrock the API key field is
+ * ignored; AWS credentials go into `settings`. For openai/anthropic the
+ * caller pulls `apiKey` off the result and POSTs it to the keys sub-resource.
+ */
+export const providerFormValuesToCreate = (
 	values: ProviderFormValues,
-	existingProvider?: AIProvider,
-): CreateAIProviderRequest {
+): ProviderCreatePayload => {
+	const name = values.name.trim();
+	const baseUrl = values.baseUrl.trim();
+	const displayName = name;
+
 	if (values.type === "bedrock") {
-		const settingsCommon = {
-			_type: "bedrock" as const,
-			_version: "1",
-			model: values.model,
-			small_fast_model: values.smallFastModel,
+		const settings: AIProviderSettings = {
+			bedrock_model: values.model.trim(),
+			bedrock_small_fast_model: values.smallFastModel.trim(),
+			bedrock_access_key: values.accessKey.trim(),
+			bedrock_access_key_secret: values.accessKeySecret.trim(),
 		};
-		const newAccessKey = values.accessKey.trim();
-		const newAccessKeySecret = values.accessKeySecret.trim();
-		const hasNewCredentials = newAccessKey !== "" && newAccessKeySecret !== "";
-
-		let access_keys: string[];
-		let access_key_secrets: string[];
-		if (hasNewCredentials) {
-			access_keys = [newAccessKey];
-			access_key_secrets = [newAccessKeySecret];
-		} else if (
-			existingProvider?.type === "bedrock" &&
-			existingProvider.settings
-		) {
-			const prev = existingProvider.settings;
-			access_keys = [...(prev.access_keys ?? [])];
-			access_key_secrets = [...(prev.access_key_secrets ?? [])];
-		} else {
-			access_keys = [newAccessKey];
-			access_key_secrets = [newAccessKeySecret];
-		}
-
 		return {
-			type: "bedrock",
-			name: values.name,
-			display_name: values.name,
-			base_url: values.baseUrl,
-			enabled: values.enabled,
-			settings: {
-				...settingsCommon,
-				access_keys,
-				access_key_secrets,
+			request: {
+				type: "anthropic",
+				name,
+				display_name: displayName,
+				base_url: baseUrl,
+				enabled: values.enabled,
+				settings,
 			},
 		};
 	}
 
-	const newApiKey = values.apiKey.trim();
-	let api_keys: string[] | undefined;
-	if (newApiKey !== "") {
-		api_keys = [newApiKey];
-	} else if (
-		existingProvider?.type === "openai" ||
-		existingProvider?.type === "anthropic"
-	) {
-		const prev = [
-			...(existingProvider.api_keys ?? existingProvider.api_key ?? []),
-		];
-		api_keys = prev.length > 0 ? prev : undefined;
+	return {
+		request: {
+			type: values.type === "openai" ? "openai" : "anthropic",
+			name,
+			display_name: displayName,
+			base_url: baseUrl,
+			enabled: values.enabled,
+		},
+		apiKey: values.apiKey.trim() || undefined,
+	};
+};
+
+/**
+ * Build a PATCH payload for an existing provider. Bedrock secrets follow an
+ * "empty = keep" contract: if the user did not clear the masked inputs, we
+ * send no Bedrock secret fields and the server leaves them unchanged. The
+ * non-secret Bedrock settings (region, models) are always sent when the form
+ * holds a Bedrock provider.
+ */
+export const providerFormValuesToUpdate = (
+	values: ProviderFormValues,
+	existingProvider: AIProvider,
+): UpdateAIProviderRequest => {
+	const base: UpdateAIProviderRequest = {
+		display_name: values.name.trim(),
+		enabled: values.enabled,
+		base_url: values.baseUrl.trim(),
+	};
+
+	if (values.type !== "bedrock") {
+		return base;
 	}
 
-	return {
-		type: values.type as "openai" | "anthropic",
-		name: values.name,
-		display_name: values.name,
-		base_url: values.baseUrl,
-		enabled: values.enabled,
-		settings: null,
-		...(api_keys !== undefined && api_keys.length > 0 ? { api_keys } : {}),
-	};
-}
+	const newAccessKey = values.accessKey.trim();
+	const newAccessKeySecret = values.accessKeySecret.trim();
+	const credentialsChanged = newAccessKey !== "" && newAccessKeySecret !== "";
 
-export function aiProviderToFormValues(
+	const settings: AIProviderSettings = {
+		bedrock_model: values.model.trim(),
+		bedrock_small_fast_model: values.smallFastModel.trim(),
+		// Preserve the saved region; the form doesn't surface region today.
+		...(existingProvider.settings.bedrock_region
+			? { bedrock_region: existingProvider.settings.bedrock_region }
+			: {}),
+		...(credentialsChanged
+			? {
+					bedrock_access_key: newAccessKey,
+					bedrock_access_key_secret: newAccessKeySecret,
+				}
+			: {}),
+	};
+
+	return { ...base, settings };
+};
+
+/** Populate the form from an `AIProvider` fetched from the API. */
+export const aiProviderToFormValues = (
 	provider: AIProvider,
-): Partial<ProviderFormValues> {
-	if (provider.type === "bedrock" && provider.settings) {
+): Partial<ProviderFormValues> => {
+	if (isBedrockProvider(provider)) {
 		const s = provider.settings;
 		return {
 			type: "bedrock",
 			name: provider.name,
 			baseUrl: provider.base_url,
-			model: s.model,
-			smallFastModel: s.small_fast_model,
+			model: s.bedrock_model ?? "",
+			smallFastModel: s.bedrock_small_fast_model ?? "",
 			accessKey: "",
 			accessKeySecret: "",
 			enabled: provider.enabled,
@@ -123,4 +155,4 @@ export function aiProviderToFormValues(
 		apiKey: "",
 		enabled: provider.enabled,
 	};
-}
+};

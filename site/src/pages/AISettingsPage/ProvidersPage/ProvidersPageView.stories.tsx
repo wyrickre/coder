@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { reactRouterParameters } from "storybook-addon-remix-react-router";
-import { MOCK_READ_LIST_PROVIDERS } from "#/pages/AISettingsPage/mock";
+import { MockAIProviders } from "#/testHelpers/entities";
 import ProvidersPageView from "./ProvidersPageView";
 
 const meta: Meta<typeof ProvidersPageView> = {
@@ -9,7 +9,7 @@ const meta: Meta<typeof ProvidersPageView> = {
 	args: {
 		isLoading: false,
 		isFetching: false,
-		providers: MOCK_READ_LIST_PROVIDERS,
+		providers: MockAIProviders,
 	},
 	parameters: {
 		reactRouter: reactRouterParameters({

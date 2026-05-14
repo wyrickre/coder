@@ -19,15 +19,9 @@
  *
  * For example, `utils/delay` must be imported using `../utils/delay` instead.
  */
-import globalAxios, {
-	AxiosError,
-	type AxiosInstance,
-	type InternalAxiosRequestConfig,
-	isAxiosError,
-} from "axios";
+import globalAxios, { type AxiosInstance, isAxiosError } from "axios";
 import type dayjs from "dayjs";
 import userAgentParser from "ua-parser-js";
-import { MOCK_READ_LIST_PROVIDERS } from "#/pages/AISettingsPage/mock";
 import { delay } from "../utils/delay";
 import {
 	OneWayWebSocket,
@@ -3033,125 +3027,76 @@ class ApiMethods {
 		return response.data;
 	};
 
-	// getProviders = async (options: SearchParamOptions) => {
-	getProviders = async (): Promise<AIProvider[]> => {
-		// const url = getURLWithSearchParams("/api/v2/ai/providers", options);
-
-		// const response = await this.axios.get(url);
-		// return response.data
-		return MOCK_READ_LIST_PROVIDERS;
-	};
-
-	getProvider = async (providerName: string): Promise<AIProvider> => {
-		// const response = await this.axios.get<AIProvider>(
-		// 	`/api/v2/ai/providers/${encodeURIComponent(providerName)}`,
-		// );
-		// return response.data;
-		const found = MOCK_READ_LIST_PROVIDERS.find((p) => p.name === providerName);
-		if (!found) {
-			const config = {} as InternalAxiosRequestConfig;
-			throw new AxiosError<{ message: string }>(
-				"Request failed with status code 404",
-				AxiosError.ERR_BAD_REQUEST,
-				config,
-				undefined,
-				{
-					data: { message: `AI provider ${providerName} was not found.` },
-					status: 404,
-					statusText: "Not Found",
-					headers: {},
-					config,
-				},
-			);
-		}
-		return found;
-	};
-
-	// createProvider = async (req: TypesGen.TODO) => {
-	createProvider = async (
-		_req: CreateAIProviderRequest,
-	): Promise<AIProvider> => {
-		// const response = await this.axios.post("/api/v2/ai/providers", req);
-		// return response.data
-		return MOCK_READ_LIST_PROVIDERS[0];
-	};
-
-	// updateProvider = async (providerId: string, req: TypesGen.TODO) => {
-	updateProvider = async (
-		providerName: string,
-		req: UpdateAIProviderRequest,
-	): Promise<AIProvider> => {
-		// const response = await this.axios.patch(
-		// 	`/api/v2/ai/providers/${encodeURIComponent(providerName)}`,
-		// 	req,
-		// );
-		// return response.data;
-		const existing = MOCK_READ_LIST_PROVIDERS.find(
-			(p) => p.name === providerName,
+	getAIProviders = async (): Promise<TypesGen.AIProvider[]> => {
+		const response = await this.axios.get<TypesGen.AIProvider[]>(
+			"/api/v2/ai/providers",
 		);
-		if (!existing) {
-			const config = {} as InternalAxiosRequestConfig;
-			throw new AxiosError<{ message: string }>(
-				"Request failed with status code 404",
-				AxiosError.ERR_BAD_REQUEST,
-				config,
-				undefined,
-				{
-					data: { message: `AI provider ${providerName} was not found.` },
-					status: 404,
-					statusText: "Not Found",
-					headers: {},
-					config,
-				},
-			);
-		}
-		return { ...existing, ...req };
+		return response.data;
 	};
 
-	// deleteProvider = async (providerId: string) => {
-	deleteProvider = async (_providerName: string): Promise<void> => {
-		// await this.axios.delete(
-		// 	`/api/v2/ai/providers/${encodeURIComponent(providerName)}`,
-		// );
-		return;
+	getAIProvider = async (idOrName: string): Promise<TypesGen.AIProvider> => {
+		const response = await this.axios.get<TypesGen.AIProvider>(
+			`/api/v2/ai/providers/${encodeURIComponent(idOrName)}`,
+		);
+		return response.data;
+	};
+
+	createAIProvider = async (
+		req: TypesGen.CreateAIProviderRequest,
+	): Promise<TypesGen.AIProvider> => {
+		const response = await this.axios.post<TypesGen.AIProvider>(
+			"/api/v2/ai/providers",
+			req,
+		);
+		return response.data;
+	};
+
+	updateAIProvider = async (
+		idOrName: string,
+		req: TypesGen.UpdateAIProviderRequest,
+	): Promise<TypesGen.AIProvider> => {
+		const response = await this.axios.patch<TypesGen.AIProvider>(
+			`/api/v2/ai/providers/${encodeURIComponent(idOrName)}`,
+			req,
+		);
+		return response.data;
+	};
+
+	deleteAIProvider = async (idOrName: string): Promise<void> => {
+		await this.axios.delete(
+			`/api/v2/ai/providers/${encodeURIComponent(idOrName)}`,
+		);
+	};
+
+	getAIProviderKeys = async (
+		idOrName: string,
+	): Promise<TypesGen.AIProviderKey[]> => {
+		const response = await this.axios.get<TypesGen.AIProviderKey[]>(
+			`/api/v2/ai/providers/${encodeURIComponent(idOrName)}/keys`,
+		);
+		return response.data;
+	};
+
+	createAIProviderKey = async (
+		idOrName: string,
+		req: TypesGen.CreateAIProviderKeyRequest,
+	): Promise<TypesGen.AIProviderKey> => {
+		const response = await this.axios.post<TypesGen.AIProviderKey>(
+			`/api/v2/ai/providers/${encodeURIComponent(idOrName)}/keys`,
+			req,
+		);
+		return response.data;
+	};
+
+	deleteAIProviderKey = async (
+		idOrName: string,
+		keyID: string,
+	): Promise<void> => {
+		await this.axios.delete(
+			`/api/v2/ai/providers/${encodeURIComponent(idOrName)}/keys/${encodeURIComponent(keyID)}`,
+		);
 	};
 }
-
-/** Bedrock-specific settings payload for AI governance providers. */
-type AIProviderBedrockSettings = {
-	readonly _type: "bedrock";
-	readonly _version: string;
-	readonly model: string;
-	readonly small_fast_model: string;
-	readonly access_keys: string[];
-	readonly access_key_secrets: string[];
-};
-
-/** AI governance provider row returned by the providers API. */
-export type AIProvider = {
-	readonly type: "openai" | "anthropic" | "bedrock";
-	readonly name: string;
-	readonly display_name: string;
-	readonly base_url: string;
-	readonly enabled: boolean;
-	readonly api_keys?: string[];
-	readonly api_key?: string[];
-	readonly settings?: AIProviderBedrockSettings | null;
-	readonly created_at?: string;
-	readonly updated_at?: string;
-};
-
-export type CreateAIProviderRequest = {
-	readonly type: "openai" | "anthropic" | "bedrock";
-	readonly name: string;
-	readonly display_name: string;
-	readonly base_url: string;
-	readonly enabled: boolean;
-	readonly api_keys?: string[];
-	readonly settings?: AIProviderBedrockSettings | null;
-};
-
-export type UpdateAIProviderRequest = CreateAIProviderRequest;
 
 export type TaskFeedbackRating = "good" | "okay" | "bad";
 

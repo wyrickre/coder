@@ -1,5 +1,5 @@
 import { ChevronRightIcon } from "lucide-react";
-import type { AIProvider } from "#/api/api";
+import type { AIProvider } from "#/api/typesGenerated";
 import { Avatar } from "#/components/Avatar/Avatar";
 import { AvatarData } from "#/components/Avatar/AvatarData";
 import { TableCell, TableRow } from "#/components/Table/Table";
@@ -24,12 +24,7 @@ export const ProviderRow: React.FC<ProviderRowProps> = ({
 			<TableCell>
 				<AvatarData
 					title={provider.display_name}
-					subtitle={
-						// TODO: This is a placeholder for the number of models
-						provider.api_keys?.length || provider.api_key?.length
-							? `${provider.api_keys?.length ?? provider.api_key?.length ?? 0} models`
-							: "No models"
-					}
+					subtitle={provider.name}
 					avatar={
 						<Avatar className="flex items-center justify-center">
 							<ProviderIcon provider={provider.type} />

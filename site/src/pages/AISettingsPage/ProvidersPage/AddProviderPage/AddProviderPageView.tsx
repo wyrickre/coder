@@ -11,7 +11,7 @@ import {
 	PageHeaderTitle,
 } from "#/components/PageHeader/PageHeader";
 import { ProviderForm } from "../components/ProviderForm";
-import { providerFormValuesToRequest } from "../components/providerFormApiMap";
+import { providerFormValuesToCreate } from "../components/providerFormApiMap";
 
 const AddProviderPageView: React.FC = () => {
 	const navigate = useNavigate();
@@ -43,23 +43,27 @@ const AddProviderPageView: React.FC = () => {
 						isLoading={createMutation.isPending}
 						submitError={createMutation.error}
 						onSubmit={(values) => {
-							createMutation.mutate(providerFormValuesToRequest(values), {
-								onSuccess: (res) => {
-									toast.success(`Provider "${res.name}" added.`);
-									void navigate(`/aisettings/${res.name}`);
+							const { request, apiKey } = providerFormValuesToCreate(values);
+							createMutation.mutate(
+								{ provider: request, apiKey },
+								{
+									onSuccess: (res) => {
+										toast.success(`Provider "${res.name}" added.`);
+										void navigate(`/aisettings/${res.name}`);
+									},
+									onError: (error) => {
+										const name = values.name.trim();
+										toast.error(
+											getErrorMessage(
+												error,
+												name
+													? `Failed to add provider "${name}".`
+													: "Failed to add provider.",
+											),
+										);
+									},
 								},
-								onError: (error) => {
-									const name = values.name.trim();
-									toast.error(
-										getErrorMessage(
-											error,
-											name
-												? `Failed to add provider "${name}".`
-												: "Failed to add provider.",
-										),
-									);
-								},
-							});
+							);
 						}}
 					/>
 				</div>

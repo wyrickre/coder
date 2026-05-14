@@ -1,6 +1,6 @@
 import { PlusIcon } from "lucide-react";
 import { Link, useNavigate } from "react-router";
-import type { AIProvider } from "#/api/api";
+import type { AIProvider } from "#/api/typesGenerated";
 import { Button } from "#/components/Button/Button";
 import {
 	PageHeader,

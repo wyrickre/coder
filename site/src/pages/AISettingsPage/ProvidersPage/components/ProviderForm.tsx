@@ -38,6 +38,11 @@ export type ProviderFormValues = {
 const bedrockRuntimeBaseUrlRegex =
 	/^https:\/\/bedrock-runtime\.[a-z0-9-]+\.amazonaws\.com\/?$/i;
 
+// Provider names must match the kebab-case pattern enforced by the API.
+const providerNameRegex = /^[a-z0-9]+(-[a-z0-9]+)*$/;
+const providerNameErrorMessage =
+	"Name must be lowercase, hyphen-separated (e.g. 'my-anthropic').";
+
 /**
  * Stable mask shown in credential inputs when a value already exists on the
  * server. Focusing the input clears it, so we never have to round-trip the
@@ -62,7 +67,9 @@ const makeOpenAiAnthropicSchema = (editing: boolean) =>
 		type: Yup.string()
 			.oneOf(["openai", "anthropic"] as const)
 			.required(),
-		name: Yup.string().required("Name is required"),
+		name: Yup.string()
+			.matches(providerNameRegex, providerNameErrorMessage)
+			.required("Name is required"),
 		baseUrl: Yup.string().url("Custom endpoint must be a valid URL"),
 		apiKey: editing
 			? Yup.string()
@@ -75,7 +82,9 @@ const makeBedrockSchema = (editing: boolean) =>
 		type: Yup.string()
 			.oneOf(["bedrock"] as const)
 			.required(),
-		name: Yup.string().required("Name is required"),
+		name: Yup.string()
+			.matches(providerNameRegex, providerNameErrorMessage)
+			.required("Name is required"),
 		baseUrl: Yup.string()
 			.url("Base URL must be a valid URL")
 			.matches(
@@ -116,8 +125,6 @@ type ProviderFormProps = {
 	editing?: boolean;
 	/** When editing Bedrock and the API already has keys, show masked placeholders until cleared. */
 	bedrockSavedAccessCredentials?: boolean;
-	/** When editing OpenAI or Anthropic and the API already has an API key. */
-	openAiAnthropicSavedApiKey?: boolean;
 	initialValues?: Partial<ProviderFormValues>;
 	onSubmit?: (values: ProviderFormValues) => void;
 	isLoading?: boolean;
@@ -127,7 +134,6 @@ type ProviderFormProps = {
 export const ProviderForm: FC<ProviderFormProps> = ({
 	editing = false,
 	bedrockSavedAccessCredentials = false,
-	openAiAnthropicSavedApiKey = false,
 	initialValues,
 	onSubmit,
 	isLoading = false,
@@ -138,35 +144,29 @@ export const ProviderForm: FC<ProviderFormProps> = ({
 
 	// "Masked" means we're showing SAVED_CREDENTIAL_MASK in the inputs. The
 	// first focus on a masked field clears it and flips the mask off so the
-	// user can type a replacement; the explicit "Clear key(s)" button does the
+	// user can type a replacement; the explicit "Clear keys" button does the
 	// same thing.
 	const [bedrockKeysMasked, setBedrockKeysMasked] = useState(
 		() => bedrockSavedAccessCredentials,
 	);
-	const [openAiAnthropicApiKeyMasked, setOpenAiAnthropicApiKeyMasked] =
-		useState(() => openAiAnthropicSavedApiKey);
 
 	useEffect(() => {
 		setBedrockKeysMasked(bedrockSavedAccessCredentials);
 	}, [bedrockSavedAccessCredentials]);
 
-	useEffect(() => {
-		setOpenAiAnthropicApiKeyMasked(openAiAnthropicSavedApiKey);
-	}, [openAiAnthropicSavedApiKey]);
-
 	const form = useFormik<ProviderFormValues>({
 		initialValues: {
 			...defaultInitialValues,
 			...initialValues,
-			// When the server has saved credentials, seed the inputs with the
-			// mask so the user sees something is on file. The mask is replaced
-			// (cleared) on focus, and any "" submitted back is treated by the
-			// API mapping as "keep the existing value".
-			apiKey: openAiAnthropicSavedApiKey ? SAVED_CREDENTIAL_MASK : "",
+			// When the server has saved Bedrock credentials, seed the inputs
+			// with the mask so the user sees something is on file. The mask
+			// is replaced (cleared) on focus, and any "" submitted back is
+			// treated by the API mapping as "keep the existing value".
 			accessKey: bedrockSavedAccessCredentials ? SAVED_CREDENTIAL_MASK : "",
 			accessKeySecret: bedrockSavedAccessCredentials
 				? SAVED_CREDENTIAL_MASK
 				: "",
+			apiKey: "",
 		},
 		validationSchema: getProviderFormSchema(editing),
 		onSubmit: onSubmit ?? (() => {}),
@@ -176,11 +176,6 @@ export const ProviderForm: FC<ProviderFormProps> = ({
 	const typeField = getFieldHelpers("type");
 
 	const typeSelectValue = form.values.type;
-
-	const clearOpenAiAnthropicApiKey = () => {
-		void form.setFieldValue("apiKey", "");
-		setOpenAiAnthropicApiKeyMasked(false);
-	};
 
 	const clearBedrockKeys = () => {
 		void form.setFieldValue("accessKey", "");
@@ -263,36 +258,19 @@ export const ProviderForm: FC<ProviderFormProps> = ({
 							description="Custom endpoint for this provider. Leave empty to use the default."
 							className="w-full"
 						/>
-						<div className="flex flex-col gap-4">
+						{/* API keys are managed via a sub-resource on the server, so we
+						    only collect an initial key on the create flow here. Adding
+						    or removing keys after creation will live in a dedicated UI
+						    (TODO). */}
+						{!editing && (
 							<FormField
 								field={getFieldHelpers("apiKey")}
 								label="API key"
 								type="password"
-								description={
-									editing && !openAiAnthropicApiKeyMasked
-										? "Enter a new API key to replace the saved key."
-										: undefined
-								}
 								className="w-full"
 								autoComplete="new-password"
-								onFocus={
-									openAiAnthropicApiKeyMasked
-										? clearOpenAiAnthropicApiKey
-										: undefined
-								}
 							/>
-							{openAiAnthropicApiKeyMasked && (
-								<Button
-									type="button"
-									variant="outline"
-									className="self-start"
-									onClick={clearOpenAiAnthropicApiKey}
-								>
-									<TrashIcon />
-									<span>Clear key</span>
-								</Button>
-							)}
-						</div>
+						)}
 					</>
 				)}
 
