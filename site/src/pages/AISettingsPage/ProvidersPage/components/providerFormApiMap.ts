@@ -13,6 +13,15 @@ export function hasBedrockStoredCredentials(provider: AIProvider): boolean {
 	return ak !== "" || sk !== "";
 }
 
+/** OpenAI or Anthropic row has a non-empty API key from the API. */
+export function hasOpenAiAnthropicStoredApiKey(provider: AIProvider): boolean {
+	if (provider.type !== "openai" && provider.type !== "anthropic") {
+		return false;
+	}
+	const keys = provider.api_keys ?? provider.api_key ?? [];
+	return Boolean(keys[0]?.trim());
+}
+
 export function providerFormValuesToCreateRequest(
 	values: ProviderFormValues,
 	existingProvider?: AIProvider,
@@ -59,6 +68,24 @@ export function providerFormValuesToCreateRequest(
 		};
 	}
 
+	const hasNewApiKey = !isCredentialPlaceholder(values.apiKey);
+	let api_keys: string[] | undefined;
+	if (hasNewApiKey) {
+		api_keys = [values.apiKey.trim()];
+	} else if (
+		(existingProvider?.type === "openai" ||
+			existingProvider?.type === "anthropic") &&
+		(existingProvider.api_keys?.some((k) => k?.trim()) ||
+			existingProvider.api_key?.some((k) => k?.trim()))
+	) {
+		const prev = [
+			...(existingProvider.api_keys ?? existingProvider.api_key ?? []),
+		];
+		api_keys = prev.length > 0 ? prev : undefined;
+	} else if (values.apiKey.trim() !== "") {
+		api_keys = [values.apiKey.trim()];
+	}
+
 	return {
 		type: values.type as "openai" | "anthropic",
 		name: values.name,
@@ -66,6 +93,7 @@ export function providerFormValuesToCreateRequest(
 		base_url: values.baseURL,
 		enabled: values.enabled,
 		settings: null,
+		...(api_keys !== undefined && api_keys.length > 0 ? { api_keys } : {}),
 	};
 }
 
@@ -90,6 +118,7 @@ export function aiProviderToFormValues(
 		type: provider.type === "openai" ? "openai" : "anthropic",
 		name: provider.name,
 		baseURL: provider.base_url,
+		apiKey: "",
 		enabled: provider.enabled,
 	};
 }

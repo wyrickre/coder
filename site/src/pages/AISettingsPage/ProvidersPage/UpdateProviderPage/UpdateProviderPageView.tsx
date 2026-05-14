@@ -21,6 +21,7 @@ import { getProviderIcon } from "../components/ProviderIcon";
 import {
 	aiProviderToFormValues,
 	hasBedrockStoredCredentials,
+	hasOpenAiAnthropicStoredApiKey,
 	providerFormValuesToCreateRequest,
 } from "../components/providerFormApiMap";
 
@@ -100,6 +101,9 @@ const UpdateProviderPageView: React.FC = () => {
 						key={providerFormKey}
 						editing
 						bedrockSavedAccessCredentials={hasBedrockStoredCredentials(
+							provider,
+						)}
+						openAiAnthropicSavedApiKey={hasOpenAiAnthropicStoredApiKey(
 							provider,
 						)}
 						initialValues={aiProviderToFormValues(provider)}

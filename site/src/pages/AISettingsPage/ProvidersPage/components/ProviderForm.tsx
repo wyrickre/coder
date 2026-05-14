@@ -32,6 +32,7 @@ export type ProviderFormValues = {
 	smallFastModel: string;
 	accessKey: string;
 	accessKeySecret: string;
+	apiKey: string;
 	enabled: boolean;
 };
 
@@ -41,7 +42,7 @@ const bedrockRuntimeBaseUrlRegex =
 	/^https:\/\/bedrock-runtime\.[a-z0-9-]+\.amazonaws\.com\/?$/i;
 
 /** Dummy value so read-only password inputs show a stable mask (not real credentials). */
-const BEDROCK_OMITTED_CREDENTIAL_DISPLAY = "********";
+const OMITTED_CREDENTIAL_MASK = "********";
 
 const defaultInitialValues: ProviderFormValues = {
 	type: "anthropic",
@@ -52,17 +53,22 @@ const defaultInitialValues: ProviderFormValues = {
 	smallFastModel: "",
 	accessKey: "",
 	accessKeySecret: "",
+	apiKey: "",
 	enabled: false,
 };
 
-const openaiAnthropicSchema = Yup.object({
-	type: Yup.string()
-		.oneOf(["openai", "anthropic"] as const)
-		.required(),
-	name: Yup.string().required("Name is required"),
-	baseURL: Yup.string().required("Base URL is required"),
-	enabled: Yup.boolean(),
-});
+const makeOpenAiAnthropicSchema = (editing: boolean) =>
+	Yup.object({
+		type: Yup.string()
+			.oneOf(["openai", "anthropic"] as const)
+			.required(),
+		name: Yup.string().required("Name is required"),
+		baseURL: Yup.string().required("Base URL is required"),
+		apiKey: editing
+			? Yup.string()
+			: Yup.string().required("API key is required"),
+		enabled: Yup.boolean(),
+	});
 
 const makeBedrockSchema = (editing: boolean) => {
 	const base = Yup.object({
@@ -112,7 +118,7 @@ export const getProviderFormSchema = (editing: boolean) =>
 		switch (value?.type) {
 			case "openai":
 			case "anthropic":
-				return openaiAnthropicSchema;
+				return makeOpenAiAnthropicSchema(editing);
 			case "bedrock":
 				return makeBedrockSchema(editing);
 			default:
@@ -131,6 +137,8 @@ type ProviderFormProps = {
 	editing?: boolean;
 	/** When editing Bedrock and the API already has keys, show masked placeholders until cleared. */
 	bedrockSavedAccessCredentials?: boolean;
+	/** When editing OpenAI or Anthropic and the API already has an API key. */
+	openAiAnthropicSavedApiKey?: boolean;
 	initialValues?: Partial<ProviderFormValues>;
 	onSubmit?: (values: ProviderFormValues) => void;
 	isLoading?: boolean;
@@ -140,6 +148,7 @@ type ProviderFormProps = {
 export const ProviderForm: FC<ProviderFormProps> = ({
 	editing = false,
 	bedrockSavedAccessCredentials = false,
+	openAiAnthropicSavedApiKey = false,
 	initialValues,
 	onSubmit,
 	isLoading = false,
@@ -149,17 +158,28 @@ export const ProviderForm: FC<ProviderFormProps> = ({
 	const enabledSwitchId = useId();
 	const omittedAccessKeyId = useId();
 	const omittedSecretId = useId();
+	const omittedOpenAiApiKeyId = useId();
 
 	const [bedrockKeysUnlocked, setBedrockKeysUnlocked] = useState(
 		() => !bedrockSavedAccessCredentials,
 	);
 
+	const [openAiAnthropicApiKeyUnlocked, setOpenAiAnthropicApiKeyUnlocked] =
+		useState(() => !openAiAnthropicSavedApiKey);
+
 	useEffect(() => {
 		setBedrockKeysUnlocked(!bedrockSavedAccessCredentials);
 	}, [bedrockSavedAccessCredentials]);
 
+	useEffect(() => {
+		setOpenAiAnthropicApiKeyUnlocked(!openAiAnthropicSavedApiKey);
+	}, [openAiAnthropicSavedApiKey]);
+
 	const showBedrockOmittedCredentials =
 		editing && bedrockSavedAccessCredentials && !bedrockKeysUnlocked;
+
+	const showOpenAiAnthropicOmittedApiKey =
+		editing && openAiAnthropicSavedApiKey && !openAiAnthropicApiKeyUnlocked;
 
 	const form = useFormik<ProviderFormValues>({
 		initialValues: { ...defaultInitialValues, ...initialValues },
@@ -247,6 +267,51 @@ export const ProviderForm: FC<ProviderFormProps> = ({
 							description="Custom endpoint for this provider. Leave empty to use the default."
 							className="w-full"
 						/>
+						{showOpenAiAnthropicOmittedApiKey ? (
+							<div className="flex flex-col gap-4">
+								<p className="m-0 text-xs text-content-secondary">
+									A saved API key is on file. Reset it to enter a new key.
+								</p>
+								<div className="flex flex-col gap-2">
+									<Label htmlFor={omittedOpenAiApiKeyId}>API key</Label>
+									<Input
+										id={omittedOpenAiApiKeyId}
+										type="password"
+										readOnly
+										tabIndex={-1}
+										value={OMITTED_CREDENTIAL_MASK}
+										autoComplete="off"
+										aria-label="API key on file (hidden)"
+										className="text-content-secondary"
+									/>
+								</div>
+								<Button
+									type="button"
+									variant="outline"
+									className="self-start"
+									onClick={() => {
+										void form.setFieldValue("apiKey", "");
+										setOpenAiAnthropicApiKeyUnlocked(true);
+									}}
+								>
+									<TrashIcon />
+									<span>Reset API key</span>
+								</Button>
+							</div>
+						) : (
+							<FormField
+								field={getFieldHelpers("apiKey")}
+								label="API key"
+								type="password"
+								description={
+									editing && openAiAnthropicApiKeyUnlocked
+										? "Enter a new API key to replace the saved key."
+										: undefined
+								}
+								className="w-full"
+								autoComplete="new-password"
+							/>
+						)}
 					</>
 				)}
 
@@ -295,7 +360,7 @@ export const ProviderForm: FC<ProviderFormProps> = ({
 										type="password"
 										readOnly
 										tabIndex={-1}
-										value={BEDROCK_OMITTED_CREDENTIAL_DISPLAY}
+										value={OMITTED_CREDENTIAL_MASK}
 										autoComplete="off"
 										aria-label="Access key on file (hidden)"
 										className="text-content-secondary"
@@ -308,7 +373,7 @@ export const ProviderForm: FC<ProviderFormProps> = ({
 										type="password"
 										readOnly
 										tabIndex={-1}
-										value={BEDROCK_OMITTED_CREDENTIAL_DISPLAY}
+										value={OMITTED_CREDENTIAL_MASK}
 										autoComplete="off"
 										aria-label="Access key secret on file (hidden)"
 										className="text-content-secondary"
