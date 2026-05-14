@@ -2,6 +2,8 @@ import type { QueryClient } from "react-query";
 import { API } from "#/api/api";
 import type {
 	AIProvider,
+	AIProviderKey,
+	CreateAIProviderKeyRequest,
 	CreateAIProviderRequest,
 	UpdateAIProviderRequest,
 } from "#/api/typesGenerated";
@@ -10,6 +12,9 @@ const aiProvidersListKey = ["ai", "providers"] as const;
 
 const aiProviderKeyFor = (idOrName: string) =>
 	[...aiProvidersListKey, idOrName] as const;
+
+const aiProviderKeysListKey = (idOrName: string) =>
+	[...aiProviderKeyFor(idOrName), "keys"] as const;
 
 export const aiProvidersList = () => ({
 	queryKey: aiProvidersListKey,
@@ -82,5 +87,35 @@ export const deleteAIProviderMutation = (
 	onSuccess: async () => {
 		await queryClient.invalidateQueries({ queryKey: aiProvidersListKey });
 		queryClient.removeQueries({ queryKey: aiProviderKeyFor(idOrName) });
+	},
+});
+
+export const aiProviderKeys = (idOrName: string) => ({
+	queryKey: aiProviderKeysListKey(idOrName),
+	queryFn: (): Promise<AIProviderKey[]> => API.getAIProviderKeys(idOrName),
+});
+
+export const createAIProviderKeyMutation = (
+	queryClient: QueryClient,
+	idOrName: string,
+) => ({
+	mutationFn: (req: CreateAIProviderKeyRequest) =>
+		API.createAIProviderKey(idOrName, req),
+	onSuccess: async () => {
+		await queryClient.invalidateQueries({
+			queryKey: aiProviderKeysListKey(idOrName),
+		});
+	},
+});
+
+export const deleteAIProviderKeyMutation = (
+	queryClient: QueryClient,
+	idOrName: string,
+) => ({
+	mutationFn: (keyID: string) => API.deleteAIProviderKey(idOrName, keyID),
+	onSuccess: async () => {
+		await queryClient.invalidateQueries({
+			queryKey: aiProviderKeysListKey(idOrName),
+		});
 	},
 });

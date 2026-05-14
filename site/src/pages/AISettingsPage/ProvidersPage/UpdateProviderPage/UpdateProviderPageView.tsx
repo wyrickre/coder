@@ -18,11 +18,13 @@ import {
 	PageHeader,
 	PageHeaderTitle,
 } from "#/components/PageHeader/PageHeader";
+import { ApiKeyPanel } from "../components/ApiKeyPanel";
 import { ProviderForm } from "../components/ProviderForm";
 import { getProviderIcon } from "../components/ProviderIcon";
 import {
 	aiProviderToFormValues,
 	hasBedrockStoredCredentials,
+	isBedrockProvider,
 	providerFormValuesToUpdate,
 } from "../components/providerFormApiMap";
 
@@ -152,6 +154,7 @@ const UpdateProviderPageView: React.FC = () => {
 						}}
 					/>
 				</div>
+				{!isBedrockProvider(provider) && <ApiKeyPanel provider={provider} />}
 				<DeleteDialog
 					key={provider.name}
 					isOpen={deleteDialogOpen}

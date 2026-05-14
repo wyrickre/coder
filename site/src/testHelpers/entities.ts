@@ -5515,3 +5515,10 @@ export const MockAIProviders: TypesGen.AIProvider[] = [
 	MockAIProviderAnthropic,
 	MockAIProviderBedrock,
 ];
+
+export const MockAIProviderKey: TypesGen.AIProviderKey = {
+	id: "2f7c3a8a-1d51-4f9f-9ab2-1c2d3e4f5a01",
+	provider_id: MockAIProviderOpenAI.id,
+	created_at: "2026-05-14T10:00:00Z",
+	updated_at: "2026-05-14T10:00:00Z",
+};

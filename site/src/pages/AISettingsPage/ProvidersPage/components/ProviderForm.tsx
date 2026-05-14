@@ -283,10 +283,10 @@ export const ProviderForm: FC<ProviderFormProps> = ({
 							description="Custom endpoint for this provider. Leave empty to use the default."
 							className="w-full"
 						/>
-						{/* API keys are managed via a sub-resource on the server, so we
-						    only collect an initial key on the create flow here. Adding
-						    or removing keys after creation will live in a dedicated UI
-						    (TODO). */}
+						{/* API keys are managed via a sub-resource on the server, so
+						    we only collect an initial key on the create flow here.
+						    Existing providers manage their key via the keys panel on the
+						    update page. */}
 						{!editing && (
 							<FormField
 								field={getFieldHelpers("apiKey")}

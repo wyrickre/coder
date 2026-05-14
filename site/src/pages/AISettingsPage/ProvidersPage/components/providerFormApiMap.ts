@@ -23,7 +23,7 @@ const sanitizeCredential = (value: string): string => {
  * Bedrock-specific configuration of an Anthropic provider, recognized by the
  * presence of `bedrock_*` fields on Settings.
  */
-const isBedrockProvider = (provider: AIProvider): boolean => {
+export const isBedrockProvider = (provider: AIProvider): boolean => {
 	if (provider.type !== "anthropic") {
 		return false;
 	}
