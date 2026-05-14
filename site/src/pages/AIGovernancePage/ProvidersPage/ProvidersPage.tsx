@@ -1,5 +1,6 @@
 import { useAuthenticated } from "#/hooks/useAuthenticated";
 import { RequirePermission } from "#/modules/permissions/RequirePermission";
+import { MOCK_READ_LIST_PROVIDERS } from "#/pages/AIGovernancePage/mock";
 import ProvidersPageView from "#/pages/AIGovernancePage/ProvidersPage/ProvidersPageView";
 
 const ProvidersPage: React.FC = () => {
@@ -7,9 +8,19 @@ const ProvidersPage: React.FC = () => {
 	// TODO: We need to scope this permission.
 	const hasPermission = permissions.viewAnyAIBridgeInterception;
 
+	const { isLoading, isFetching, providers } = {
+		isLoading: false,
+		isFetching: false,
+		providers: MOCK_READ_LIST_PROVIDERS,
+	};
+
 	return (
 		<RequirePermission isFeatureVisible={hasPermission}>
-			<ProvidersPageView />
+			<ProvidersPageView
+				isLoading={isLoading}
+				isFetching={isFetching}
+				providers={providers}
+			/>
 		</RequirePermission>
 	);
 };
