@@ -32,9 +32,9 @@ const AddProviderPageView: React.FC = () => {
 				<PageHeader className="pt-6 pb-0">
 					<PageHeaderTitle>Add a provider</PageHeaderTitle>
 					<PageHeaderSubtitle>
-						Connect third-party LLM services like OpenAI, Anthropic, or Google.
-						Each provider supplies models that users can select for their
-						conversations.
+						Connect third-party LLM services like OpenAI, Anthropic, or Amazon
+						Bedrock. Each provider supplies models that users can select for
+						their conversations.
 					</PageHeaderSubtitle>
 				</PageHeader>
 				<div className="border border-solid p-6 rounded-lg">

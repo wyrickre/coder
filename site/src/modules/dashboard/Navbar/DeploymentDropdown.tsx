@@ -37,8 +37,9 @@ export const DeploymentDropdown: FC<DeploymentDropdownProps> = ({
 		!canViewAIBridge &&
 		!canViewAISettings &&
 		!canViewHealth
-	)
+	) {
 		return null;
+	}
 
 	return (
 		<DropdownMenu>

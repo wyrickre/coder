@@ -46,8 +46,8 @@ const ProvidersPageView: React.FC<ProvidersPageViewProps> = ({
 			>
 				<PageHeaderTitle>Providers</PageHeaderTitle>
 				<PageHeaderSubtitle>
-					Connect third-party LLM services like OpenAI, Anthropic, or Google.
-					Each provider supplies models that users can select for their
+					Connect third-party LLM services like OpenAI, Anthropic, or Amazon
+					Bedrock. Each provider supplies models that users can select for their
 					conversations.
 				</PageHeaderSubtitle>
 			</PageHeader>
