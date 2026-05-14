@@ -11,7 +11,7 @@ import {
 	PageHeaderTitle,
 } from "#/components/PageHeader/PageHeader";
 import { ProviderForm } from "../components/ProviderForm";
-import { providerFormValuesToCreateRequest } from "../components/providerFormApiMap";
+import { providerFormValuesToRequest } from "../components/providerFormApiMap";
 
 const AddProviderPageView: React.FC = () => {
 	const navigate = useNavigate();
@@ -43,7 +43,7 @@ const AddProviderPageView: React.FC = () => {
 						isLoading={createMutation.isPending}
 						submitError={createMutation.error}
 						onSubmit={(values) => {
-							createMutation.mutate(providerFormValuesToCreateRequest(values), {
+							createMutation.mutate(providerFormValuesToRequest(values), {
 								onSuccess: (res) => {
 									toast.success(`Provider "${res.name}" added.`);
 									void navigate(`/aisettings/${res.name}`);

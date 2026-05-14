@@ -22,7 +22,7 @@ export function hasOpenAiAnthropicStoredApiKey(provider: AIProvider): boolean {
 	return Boolean(keys[0]?.trim());
 }
 
-export function providerFormValuesToCreateRequest(
+export function providerFormValuesToRequest(
 	values: ProviderFormValues,
 	existingProvider?: AIProvider,
 ): CreateAIProviderRequest {

@@ -24,7 +24,7 @@ import {
 	aiProviderToFormValues,
 	hasBedrockStoredCredentials,
 	hasOpenAiAnthropicStoredApiKey,
-	providerFormValuesToCreateRequest,
+	providerFormValuesToRequest,
 } from "../components/providerFormApiMap";
 
 const UpdateProviderPageView: React.FC = () => {
@@ -134,7 +134,7 @@ const UpdateProviderPageView: React.FC = () => {
 						submitError={updateMutation.error}
 						onSubmit={(values) => {
 							updateMutation.mutate(
-								providerFormValuesToCreateRequest(values, provider),
+								providerFormValuesToRequest(values, provider),
 								{
 									onSuccess: () => {
 										toast.success(`Provider "${provider.name}" updated.`);
