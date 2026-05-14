@@ -1,12 +1,12 @@
 import { ChevronRightIcon } from "lucide-react";
+import type { AIProvider } from "#/api/api";
 import { Avatar } from "#/components/Avatar/Avatar";
 import { AvatarData } from "#/components/Avatar/AvatarData";
 import { TableCell, TableRow } from "#/components/Table/Table";
-import type { MOCK_READ_LIST_PROVIDERS } from "#/pages/AISettingsPage/mock";
-import { ProviderIcon } from "#/pages/AISettingsPage/ProvidersPage/components/ProviderIcon";
+import { ProviderIcon } from "./ProviderIcon";
 
 type ProviderRowProps = {
-	provider: (typeof MOCK_READ_LIST_PROVIDERS)[number];
+	provider: AIProvider;
 	onClick?: () => void;
 };
 
@@ -26,8 +26,8 @@ export const ProviderRow: React.FC<ProviderRowProps> = ({
 					title={provider.display_name}
 					subtitle={
 						// TODO: This is a placeholder for the number of models
-						provider.api_keys
-							? `${provider.api_keys?.length} models`
+						provider.api_keys?.length || provider.api_key?.length
+							? `${provider.api_keys?.length ?? provider.api_key?.length ?? 0} models`
 							: "No models"
 					}
 					avatar={

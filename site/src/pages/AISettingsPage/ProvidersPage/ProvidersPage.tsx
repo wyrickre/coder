@@ -1,32 +1,26 @@
 import { useQuery } from "react-query";
-import { API } from "#/api/api";
+import { aiProvidersList } from "#/api/queries/aiProviders";
+import { organizations } from "#/api/queries/organizations";
 import { useAuthenticated } from "#/hooks/useAuthenticated";
+import { useEmbeddedMetadata } from "#/hooks/useEmbeddedMetadata";
 import { RequirePermission } from "#/modules/permissions/RequirePermission";
-import { MOCK_READ_LIST_PROVIDERS } from "#/pages/AISettingsPage/mock";
 import ProvidersPageView from "#/pages/AISettingsPage/ProvidersPage/ProvidersPageView";
 
 const ProvidersPage: React.FC = () => {
 	const { permissions } = useAuthenticated();
+	const { metadata } = useEmbeddedMetadata();
 	// TODO: We need to scope this permission.
 	const hasPermission = permissions.viewAnyAIBridgeInterception;
 
-	const { isLoading, isFetching, providers } = {
-		isLoading: false,
-		isFetching: false,
-		providers: MOCK_READ_LIST_PROVIDERS,
-	};
-
-	const organizationsQuery = useQuery({
-		queryKey: ["organizations"],
-		queryFn: () => API.getOrganizations(),
-	});
+	const providersQuery = useQuery(aiProvidersList());
+	const organizationsQuery = useQuery(organizations(metadata.organizations));
 
 	return (
 		<RequirePermission isFeatureVisible={hasPermission}>
 			<ProvidersPageView
-				isLoading={isLoading}
-				isFetching={isFetching}
-				providers={providers}
+				isLoading={providersQuery.isLoading}
+				isFetching={providersQuery.isFetching}
+				providers={providersQuery.data ?? []}
 				organizations={organizationsQuery.data}
 			/>
 		</RequirePermission>

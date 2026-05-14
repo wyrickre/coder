@@ -1,4 +1,6 @@
-export const MOCK_READ_LIST_PROVIDERS = [
+import type { AIProvider } from "#/api/api";
+
+export const MOCK_READ_LIST_PROVIDERS: AIProvider[] = [
 	{
 		type: "openai",
 		name: "openai",

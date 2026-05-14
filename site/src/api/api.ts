@@ -22,6 +22,7 @@
 import globalAxios, { type AxiosInstance, isAxiosError } from "axios";
 import type dayjs from "dayjs";
 import userAgentParser from "ua-parser-js";
+import { MOCK_READ_LIST_PROVIDERS } from "#/pages/AISettingsPage/mock";
 import { delay } from "../utils/delay";
 import {
 	OneWayWebSocket,
@@ -3026,7 +3027,82 @@ class ApiMethods {
 		const response = await this.axios.get<string[]>(url);
 		return response.data;
 	};
+
+	// getProviders = async (options: SearchParamOptions) => {
+	getProviders = async (): Promise<AIProvider[]> => {
+		// const url = getURLWithSearchParams("/api/v2/ai/providers", options);
+
+		// const response = await this.axios.get(url);
+		// return response.data
+		return MOCK_READ_LIST_PROVIDERS;
+	};
+
+	// createProvider = async (req: TypesGen.TODO) => {
+	createProvider = async (
+		_req: CreateAIProviderRequest,
+	): Promise<AIProvider> => {
+		// const response = await this.axios.post("/api/v2/ai/providers", req);
+		// return response.data
+		return MOCK_READ_LIST_PROVIDERS[0];
+	};
+
+	// updateProvider = async (providerId: string, req: TypesGen.TODO) => {
+	updateProvider = async (
+		_providerName: string,
+		_req: UpdateAIProviderRequest,
+	): Promise<AIProvider> => {
+		// const response = await this.axios.patch(
+		// 	`/api/v2/ai/providers/${encodeURIComponent(providerName)}`,
+		// 	req,
+		// );
+		// return response.data
+		return MOCK_READ_LIST_PROVIDERS[0];
+	};
+
+	// deleteProvider = async (providerId: string) => {
+	deleteProvider = async (_providerName: string): Promise<void> => {
+		// await this.axios.delete(
+		// 	`/api/v2/ai/providers/${encodeURIComponent(providerName)}`,
+		// );
+		return;
+	};
 }
+
+/** Bedrock-specific settings payload for AI governance providers. */
+export type AIProviderBedrockSettings = {
+	readonly _type: "bedrock";
+	readonly _version: string;
+	readonly model: string;
+	readonly small_fast_model: string;
+	readonly access_keys: string[];
+	readonly access_key_secrets: string[];
+};
+
+/** AI governance provider row returned by the providers API. */
+export type AIProvider = {
+	readonly type: "openai" | "anthropic" | "bedrock";
+	readonly name: string;
+	readonly display_name: string;
+	readonly base_url: string;
+	readonly enabled: boolean;
+	readonly api_keys?: string[];
+	readonly api_key?: string[];
+	readonly settings?: AIProviderBedrockSettings | null;
+	readonly created_at?: string;
+	readonly updated_at?: string;
+};
+
+export type CreateAIProviderRequest = {
+	readonly type: "openai" | "anthropic" | "bedrock";
+	readonly name: string;
+	readonly display_name: string;
+	readonly base_url: string;
+	readonly enabled: boolean;
+	readonly api_keys?: string[];
+	readonly settings?: AIProviderBedrockSettings | null;
+};
+
+export type UpdateAIProviderRequest = CreateAIProviderRequest;
 
 export type TaskFeedbackRating = "good" | "okay" | "bad";
 

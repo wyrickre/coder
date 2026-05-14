@@ -1,5 +1,9 @@
 import { ArrowLeftIcon } from "lucide-react";
-import { Link } from "react-router";
+import { useMutation, useQueryClient } from "react-query";
+import { Link, useNavigate } from "react-router";
+import { toast } from "sonner";
+import { getErrorMessage } from "#/api/errors";
+import { createAIProviderMutation } from "#/api/queries/aiProviders";
 import { Button } from "#/components/Button/Button";
 import {
 	PageHeader,
@@ -7,8 +11,13 @@ import {
 	PageHeaderTitle,
 } from "#/components/PageHeader/PageHeader";
 import { ProviderForm } from "../components/ProviderForm";
+import { providerFormValuesToCreateRequest } from "../components/providerFormApiMap";
 
 const AddProviderPageView: React.FC = () => {
+	const navigate = useNavigate();
+	const queryClient = useQueryClient();
+	const createMutation = useMutation(createAIProviderMutation(queryClient));
+
 	return (
 		<>
 			<div className="pt-4 px-6">
@@ -29,7 +38,24 @@ const AddProviderPageView: React.FC = () => {
 					</PageHeaderSubtitle>
 				</PageHeader>
 				<div className="border border-solid p-6 rounded-lg">
-					<ProviderForm editing={false} />
+					<ProviderForm
+						editing={false}
+						isLoading={createMutation.isPending}
+						submitError={createMutation.error}
+						onSubmit={(values) => {
+							createMutation.mutate(providerFormValuesToCreateRequest(values), {
+								onSuccess: () => {
+									toast.success("Provider added.");
+									void navigate("/aisettings");
+								},
+								onError: (error) => {
+									toast.error(
+										getErrorMessage(error, "Failed to add provider."),
+									);
+								},
+							});
+						}}
+					/>
 				</div>
 			</div>
 		</>

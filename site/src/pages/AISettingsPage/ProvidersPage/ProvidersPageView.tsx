@@ -1,6 +1,7 @@
 import { PlusIcon } from "lucide-react";
 import { useLayoutEffect, useState } from "react";
 import { Link, useNavigate } from "react-router";
+import type { AIProvider } from "#/api/api";
 import type { Organization } from "#/api/typesGenerated";
 import { Avatar } from "#/components/Avatar/Avatar";
 import { Button } from "#/components/Button/Button";
@@ -25,13 +26,12 @@ import {
 } from "#/components/Table/Table";
 import { TableEmpty } from "#/components/TableEmpty/TableEmpty";
 import { TableLoader } from "#/components/TableLoader/TableLoader";
-import type { MOCK_READ_LIST_PROVIDERS } from "#/pages/AISettingsPage/mock";
 import { ProviderRow } from "#/pages/AISettingsPage/ProvidersPage/components/ProviderRow";
 
 interface ProvidersPageViewProps {
 	isLoading: boolean;
 	isFetching: boolean;
-	providers: (typeof MOCK_READ_LIST_PROVIDERS)[number][];
+	providers: AIProvider[];
 	organizations: Organization[] | undefined;
 }
 

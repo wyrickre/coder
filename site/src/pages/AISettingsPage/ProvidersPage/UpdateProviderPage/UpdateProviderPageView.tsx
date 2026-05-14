@@ -1,19 +1,45 @@
 import { ArrowLeftIcon } from "lucide-react";
-import { Link } from "react-router";
+import { useMutation, useQuery, useQueryClient } from "react-query";
+import { Link, Navigate, useNavigate, useParams } from "react-router";
+import { toast } from "sonner";
+import { getErrorMessage } from "#/api/errors";
+import {
+	aiProvidersList,
+	updateAIProviderMutation,
+} from "#/api/queries/aiProviders";
 import { Avatar } from "#/components/Avatar/Avatar";
 import { Button } from "#/components/Button/Button";
+import { Loader } from "#/components/Loader/Loader";
 import {
 	PageHeader,
 	PageHeaderTitle,
 } from "#/components/PageHeader/PageHeader";
-import { MOCK_READ_LIST_PROVIDERS } from "#/pages/AISettingsPage/mock";
-import { ProviderForm } from "#/pages/AISettingsPage/ProvidersPage/components/ProviderForm";
-import { getProviderIcon } from "#/pages/AISettingsPage/ProvidersPage/components/ProviderIcon";
+import { ProviderForm } from "../components/ProviderForm";
+import { getProviderIcon } from "../components/ProviderIcon";
+import {
+	aiProviderToFormValues,
+	providerFormValuesToCreateRequest,
+} from "../components/providerFormApiMap";
 
 const UpdateProviderPageView: React.FC = () => {
-	const { provider } = {
-		provider: MOCK_READ_LIST_PROVIDERS[0],
-	};
+	const { providerId } = useParams<{ providerId: string }>();
+	const navigate = useNavigate();
+	const queryClient = useQueryClient();
+
+	const providersQuery = useQuery(aiProvidersList());
+	const provider = providersQuery.data?.find((p) => p.name === providerId);
+
+	const updateMutation = useMutation(
+		updateAIProviderMutation(queryClient, providerId ?? ""),
+	);
+
+	if (providersQuery.isLoading) {
+		return <Loader fullscreen />;
+	}
+
+	if (!providerId || !provider) {
+		return <Navigate to="/aisettings" replace />;
+	}
 
 	return (
 		<>
@@ -37,7 +63,24 @@ const UpdateProviderPageView: React.FC = () => {
 					</div>
 				</PageHeader>
 				<div className="border border-solid p-6 rounded-lg">
-					<ProviderForm editing={true} />
+					<ProviderForm
+						editing
+						initialValues={aiProviderToFormValues(provider)}
+						isLoading={updateMutation.isPending}
+						submitError={updateMutation.error}
+						onSubmit={(values) => {
+							updateMutation.mutate(providerFormValuesToCreateRequest(values), {
+								onSuccess: () => {
+									toast.success("Provider updated.");
+								},
+								onError: (error) => {
+									toast.error(
+										getErrorMessage(error, "Failed to update provider."),
+									);
+								},
+							});
+						}}
+					/>
 				</div>
 			</div>
 		</>

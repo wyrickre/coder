@@ -2,6 +2,7 @@ import { useFormik } from "formik";
 import { type FC, useId } from "react";
 import { Link } from "react-router";
 import * as Yup from "yup";
+import { ErrorAlert } from "#/components/Alert/ErrorAlert";
 import { Button } from "#/components/Button/Button";
 import { Form, FormFields } from "#/components/Form/Form";
 import { FormField } from "#/components/FormField/FormField";
@@ -61,6 +62,7 @@ const bedrockSchema = Yup.object({
 	type: Yup.string()
 		.oneOf(["bedrock"] as const)
 		.required(),
+	name: Yup.string().required("Name is required"),
 	baseUrl: Yup.string()
 		.url("Base URL must be a valid URL")
 		.matches(
@@ -98,6 +100,7 @@ type ProviderFormProps = {
 	initialValues?: Partial<ProviderFormValues>;
 	onSubmit?: (values: ProviderFormValues) => void;
 	isLoading?: boolean;
+	submitError?: unknown;
 };
 
 export const ProviderForm: FC<ProviderFormProps> = ({
@@ -105,6 +108,7 @@ export const ProviderForm: FC<ProviderFormProps> = ({
 	initialValues,
 	onSubmit,
 	isLoading = false,
+	submitError,
 }) => {
 	const typeSelectId = useId();
 	const enabledSwitchId = useId();
@@ -115,7 +119,7 @@ export const ProviderForm: FC<ProviderFormProps> = ({
 		onSubmit: onSubmit ?? (() => {}),
 		enableReinitialize: initialValues !== undefined,
 	});
-	const getFieldHelpers = getFormHelpers(form);
+	const getFieldHelpers = getFormHelpers(form, submitError);
 	const typeField = getFieldHelpers("type");
 
 	const typeSelectValue = form.values.type;
@@ -123,6 +127,7 @@ export const ProviderForm: FC<ProviderFormProps> = ({
 	return (
 		<Form onSubmit={form.handleSubmit}>
 			<FormFields>
+				{Boolean(submitError) && <ErrorAlert error={submitError} />}
 				{!editing && (
 					<div className="flex flex-col gap-2">
 						<Label htmlFor={typeSelectId}>Type</Label>
@@ -200,9 +205,13 @@ export const ProviderForm: FC<ProviderFormProps> = ({
 				{typeSelectValue === "bedrock" && (
 					<>
 						<FormField
-							field={{
-								...getFieldHelpers("baseUrl"),
-							}}
+							field={getFieldHelpers("name")}
+							label="Name"
+							description="The name of the provider. This is used to identify the provider in the UI."
+							className="w-full"
+						/>
+						<FormField
+							field={getFieldHelpers("baseUrl")}
 							label="Base URL"
 							description={
 								<>
