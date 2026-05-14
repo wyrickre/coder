@@ -1,6 +1,5 @@
 import type { AIProvider, CreateAIProviderRequest } from "#/api/api";
 import type { ProviderFormValues } from "./ProviderForm";
-import { isCredentialPlaceholder } from "./providerCredentialPlaceholder";
 
 /** Bedrock row has any non-empty access key or secret from the API. */
 export function hasBedrockStoredCredentials(provider: AIProvider): boolean {
@@ -22,6 +21,13 @@ export function hasOpenAiAnthropicStoredApiKey(provider: AIProvider): boolean {
 	return Boolean(keys[0]?.trim());
 }
 
+/**
+ * Convert form values into a create/update request.
+ *
+ * For credential fields, an empty string means "keep the existing value on the
+ * server" (we never echo the saved value back through the form), while a
+ * non-empty string is treated as a replacement.
+ */
 export function providerFormValuesToRequest(
 	values: ProviderFormValues,
 	existingProvider?: AIProvider,
@@ -33,15 +39,15 @@ export function providerFormValuesToRequest(
 			model: values.model,
 			small_fast_model: values.smallFastModel,
 		};
-		const hasNewCredentials =
-			!isCredentialPlaceholder(values.accessKey) &&
-			!isCredentialPlaceholder(values.accessKeySecret);
+		const newAccessKey = values.accessKey.trim();
+		const newAccessKeySecret = values.accessKeySecret.trim();
+		const hasNewCredentials = newAccessKey !== "" && newAccessKeySecret !== "";
 
 		let access_keys: string[];
 		let access_key_secrets: string[];
 		if (hasNewCredentials) {
-			access_keys = [values.accessKey.trim()];
-			access_key_secrets = [values.accessKeySecret.trim()];
+			access_keys = [newAccessKey];
+			access_key_secrets = [newAccessKeySecret];
 		} else if (
 			existingProvider?.type === "bedrock" &&
 			existingProvider.settings
@@ -50,8 +56,8 @@ export function providerFormValuesToRequest(
 			access_keys = [...(prev.access_keys ?? [])];
 			access_key_secrets = [...(prev.access_key_secrets ?? [])];
 		} else {
-			access_keys = [values.accessKey.trim()];
-			access_key_secrets = [values.accessKeySecret.trim()];
+			access_keys = [newAccessKey];
+			access_key_secrets = [newAccessKeySecret];
 		}
 
 		return {
@@ -68,22 +74,18 @@ export function providerFormValuesToRequest(
 		};
 	}
 
-	const hasNewApiKey = !isCredentialPlaceholder(values.apiKey);
+	const newApiKey = values.apiKey.trim();
 	let api_keys: string[] | undefined;
-	if (hasNewApiKey) {
-		api_keys = [values.apiKey.trim()];
+	if (newApiKey !== "") {
+		api_keys = [newApiKey];
 	} else if (
-		(existingProvider?.type === "openai" ||
-			existingProvider?.type === "anthropic") &&
-		(existingProvider.api_keys?.some((k) => k?.trim()) ||
-			existingProvider.api_key?.some((k) => k?.trim()))
+		existingProvider?.type === "openai" ||
+		existingProvider?.type === "anthropic"
 	) {
 		const prev = [
 			...(existingProvider.api_keys ?? existingProvider.api_key ?? []),
 		];
 		api_keys = prev.length > 0 ? prev : undefined;
-	} else if (values.apiKey.trim() !== "") {
-		api_keys = [values.apiKey.trim()];
 	}
 
 	return {

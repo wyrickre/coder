@@ -7,7 +7,6 @@ import { ErrorAlert } from "#/components/Alert/ErrorAlert";
 import { Button } from "#/components/Button/Button";
 import { Form, FormFields } from "#/components/Form/Form";
 import { FormField } from "#/components/FormField/FormField";
-import { Input } from "#/components/Input/Input";
 import { Label } from "#/components/Label/Label";
 import {
 	Select,
@@ -19,7 +18,6 @@ import {
 import { Spinner } from "#/components/Spinner/Spinner";
 import { Switch } from "#/components/Switch/Switch";
 import { ProviderIcon } from "#/pages/AISettingsPage/ProvidersPage/components/ProviderIcon";
-import { isCredentialPlaceholder } from "#/pages/AISettingsPage/ProvidersPage/components/providerCredentialPlaceholder";
 import { cn } from "#/utils/cn";
 import { getFormHelpers } from "#/utils/formUtils";
 
@@ -40,8 +38,12 @@ export type ProviderFormValues = {
 const bedrockRuntimeBaseUrlRegex =
 	/^https:\/\/bedrock-runtime\.[a-z0-9-]+\.amazonaws\.com\/?$/i;
 
-/** Dummy value so read-only password inputs show a stable mask (not real credentials). */
-const OMITTED_CREDENTIAL_MASK = "********";
+/**
+ * Stable mask shown in credential inputs when a value already exists on the
+ * server. Focusing the input clears it, so we never have to round-trip the
+ * mask to the API.
+ */
+const SAVED_CREDENTIAL_MASK = "********";
 
 const defaultInitialValues: ProviderFormValues = {
 	type: "anthropic",
@@ -68,8 +70,8 @@ const makeOpenAiAnthropicSchema = (editing: boolean) =>
 		enabled: Yup.boolean(),
 	});
 
-const makeBedrockSchema = (editing: boolean) => {
-	const base = Yup.object({
+const makeBedrockSchema = (editing: boolean) =>
+	Yup.object({
 		type: Yup.string()
 			.oneOf(["bedrock"] as const)
 			.required(),
@@ -92,25 +94,6 @@ const makeBedrockSchema = (editing: boolean) => {
 			: Yup.string().required("Access key secret is required"),
 		enabled: Yup.boolean(),
 	});
-	if (!editing) {
-		return base;
-	}
-	return base.test(
-		"bedrock-access-keys-pair",
-		"Replace access key and secret together, or leave both blank or as the saved placeholders.",
-		(value) => {
-			const kp = isCredentialPlaceholder(value.accessKey ?? "");
-			const sp = isCredentialPlaceholder(value.accessKeySecret ?? "");
-			if (kp && sp) {
-				return true;
-			}
-			if (!kp && !sp) {
-				return true;
-			}
-			return false;
-		},
-	);
-};
 
 const getProviderFormSchema = (editing: boolean) =>
 	Yup.lazy((value: { type?: string } | undefined) => {
@@ -152,33 +135,39 @@ export const ProviderForm: FC<ProviderFormProps> = ({
 }) => {
 	const typeSelectId = useId();
 	const enabledSwitchId = useId();
-	const omittedAccessKeyId = useId();
-	const omittedSecretId = useId();
-	const omittedOpenAiApiKeyId = useId();
 
-	const [bedrockKeysUnlocked, setBedrockKeysUnlocked] = useState(
-		() => !bedrockSavedAccessCredentials,
+	// "Masked" means we're showing SAVED_CREDENTIAL_MASK in the inputs. The
+	// first focus on a masked field clears it and flips the mask off so the
+	// user can type a replacement; the explicit "Clear key(s)" button does the
+	// same thing.
+	const [bedrockKeysMasked, setBedrockKeysMasked] = useState(
+		() => bedrockSavedAccessCredentials,
 	);
-
-	const [openAiAnthropicApiKeyUnlocked, setOpenAiAnthropicApiKeyUnlocked] =
-		useState(() => !openAiAnthropicSavedApiKey);
+	const [openAiAnthropicApiKeyMasked, setOpenAiAnthropicApiKeyMasked] =
+		useState(() => openAiAnthropicSavedApiKey);
 
 	useEffect(() => {
-		setBedrockKeysUnlocked(!bedrockSavedAccessCredentials);
+		setBedrockKeysMasked(bedrockSavedAccessCredentials);
 	}, [bedrockSavedAccessCredentials]);
 
 	useEffect(() => {
-		setOpenAiAnthropicApiKeyUnlocked(!openAiAnthropicSavedApiKey);
+		setOpenAiAnthropicApiKeyMasked(openAiAnthropicSavedApiKey);
 	}, [openAiAnthropicSavedApiKey]);
 
-	const showBedrockOmittedCredentials =
-		editing && bedrockSavedAccessCredentials && !bedrockKeysUnlocked;
-
-	const showOpenAiAnthropicOmittedApiKey =
-		editing && openAiAnthropicSavedApiKey && !openAiAnthropicApiKeyUnlocked;
-
 	const form = useFormik<ProviderFormValues>({
-		initialValues: { ...defaultInitialValues, ...initialValues },
+		initialValues: {
+			...defaultInitialValues,
+			...initialValues,
+			// When the server has saved credentials, seed the inputs with the
+			// mask so the user sees something is on file. The mask is replaced
+			// (cleared) on focus, and any "" submitted back is treated by the
+			// API mapping as "keep the existing value".
+			apiKey: openAiAnthropicSavedApiKey ? SAVED_CREDENTIAL_MASK : "",
+			accessKey: bedrockSavedAccessCredentials ? SAVED_CREDENTIAL_MASK : "",
+			accessKeySecret: bedrockSavedAccessCredentials
+				? SAVED_CREDENTIAL_MASK
+				: "",
+		},
 		validationSchema: getProviderFormSchema(editing),
 		onSubmit: onSubmit ?? (() => {}),
 		enableReinitialize: initialValues !== undefined,
@@ -187,6 +176,17 @@ export const ProviderForm: FC<ProviderFormProps> = ({
 	const typeField = getFieldHelpers("type");
 
 	const typeSelectValue = form.values.type;
+
+	const clearOpenAiAnthropicApiKey = () => {
+		void form.setFieldValue("apiKey", "");
+		setOpenAiAnthropicApiKeyMasked(false);
+	};
+
+	const clearBedrockKeys = () => {
+		void form.setFieldValue("accessKey", "");
+		void form.setFieldValue("accessKeySecret", "");
+		setBedrockKeysMasked(false);
+	};
 
 	return (
 		<Form onSubmit={form.handleSubmit}>
@@ -263,48 +263,36 @@ export const ProviderForm: FC<ProviderFormProps> = ({
 							description="Custom endpoint for this provider. Leave empty to use the default."
 							className="w-full"
 						/>
-						{showOpenAiAnthropicOmittedApiKey ? (
-							<div className="flex flex-col gap-4">
-								<div className="flex flex-col gap-2">
-									<Label htmlFor={omittedOpenAiApiKeyId}>API key</Label>
-									<Input
-										id={omittedOpenAiApiKeyId}
-										type="password"
-										readOnly
-										tabIndex={-1}
-										value={OMITTED_CREDENTIAL_MASK}
-										autoComplete="off"
-										aria-label="API key on file (hidden)"
-										className="text-content-secondary"
-									/>
-								</div>
-								<Button
-									type="button"
-									variant="outline"
-									className="self-start"
-									onClick={() => {
-										void form.setFieldValue("apiKey", "");
-										setOpenAiAnthropicApiKeyUnlocked(true);
-									}}
-								>
-									<TrashIcon />
-									<span>Reset API key</span>
-								</Button>
-							</div>
-						) : (
+						<div className="flex flex-col gap-4">
 							<FormField
 								field={getFieldHelpers("apiKey")}
 								label="API key"
 								type="password"
 								description={
-									editing && openAiAnthropicApiKeyUnlocked
+									editing && !openAiAnthropicApiKeyMasked
 										? "Enter a new API key to replace the saved key."
 										: undefined
 								}
 								className="w-full"
 								autoComplete="new-password"
+								onFocus={
+									openAiAnthropicApiKeyMasked
+										? clearOpenAiAnthropicApiKey
+										: undefined
+								}
 							/>
-						)}
+							{openAiAnthropicApiKeyMasked && (
+								<Button
+									type="button"
+									variant="outline"
+									className="self-start"
+									onClick={clearOpenAiAnthropicApiKey}
+								>
+									<TrashIcon />
+									<span>Clear key</span>
+								</Button>
+							)}
+						</div>
 					</>
 				)}
 
@@ -340,69 +328,38 @@ export const ProviderForm: FC<ProviderFormProps> = ({
 							label="Small fast model"
 							className="w-full"
 						/>
-						{showBedrockOmittedCredentials ? (
-							<div className="flex flex-col gap-4">
-								<div className="flex flex-col gap-2">
-									<Label htmlFor={omittedAccessKeyId}>Access key</Label>
-									<Input
-										id={omittedAccessKeyId}
-										type="password"
-										readOnly
-										tabIndex={-1}
-										value={OMITTED_CREDENTIAL_MASK}
-										autoComplete="off"
-										aria-label="Access key on file (hidden)"
-										className="text-content-secondary"
-									/>
-								</div>
-								<div className="flex flex-col gap-2">
-									<Label htmlFor={omittedSecretId}>Access key secret</Label>
-									<Input
-										id={omittedSecretId}
-										type="password"
-										readOnly
-										tabIndex={-1}
-										value={OMITTED_CREDENTIAL_MASK}
-										autoComplete="off"
-										aria-label="Access key secret on file (hidden)"
-										className="text-content-secondary"
-									/>
-								</div>
+						<div className="flex flex-col gap-4">
+							<FormField
+								field={getFieldHelpers("accessKey")}
+								label="Access key"
+								description={
+									editing && !bedrockKeysMasked
+										? "Enter a new access key and secret together."
+										: undefined
+								}
+								className="w-full"
+								onFocus={bedrockKeysMasked ? clearBedrockKeys : undefined}
+							/>
+							<FormField
+								field={getFieldHelpers("accessKeySecret")}
+								label="Access key secret"
+								type="password"
+								className="w-full"
+								autoComplete="new-password"
+								onFocus={bedrockKeysMasked ? clearBedrockKeys : undefined}
+							/>
+							{bedrockKeysMasked && (
 								<Button
 									type="button"
 									variant="outline"
 									className="self-start"
-									onClick={() => {
-										void form.setFieldValue("accessKey", "");
-										void form.setFieldValue("accessKeySecret", "");
-										setBedrockKeysUnlocked(true);
-									}}
+									onClick={clearBedrockKeys}
 								>
 									<TrashIcon />
 									<span>Clear keys</span>
 								</Button>
-							</div>
-						) : (
-							<>
-								<FormField
-									field={getFieldHelpers("accessKey")}
-									label="Access key"
-									description={
-										editing && bedrockKeysUnlocked
-											? "Enter a new access key and secret together."
-											: undefined
-									}
-									className="w-full"
-								/>
-								<FormField
-									field={getFieldHelpers("accessKeySecret")}
-									label="Access key secret"
-									type="password"
-									className="w-full"
-									autoComplete="new-password"
-								/>
-							</>
-						)}
+							)}
+						</div>
 					</>
 				)}
 
