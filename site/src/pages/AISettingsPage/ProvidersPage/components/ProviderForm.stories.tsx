@@ -42,6 +42,23 @@ export const AddBedrock: Story = {
 	},
 };
 
+export const EditBedrockKeepCredentials: Story = {
+	args: {
+		editing: true,
+		bedrockSavedAccessCredentials: true,
+		initialValues: {
+			type: "bedrock",
+			name: "bedrock",
+			baseUrl: "https://bedrock-runtime.us-east-2.amazonaws.com",
+			model: "anthropic.claude-opus-4-7",
+			smallFastModel: "anthropic.claude-haiku-4-5",
+			accessKey: "",
+			accessKeySecret: "",
+			enabled: true,
+		},
+	},
+};
+
 export const EditProvider: Story = {
 	args: {
 		editing: true,

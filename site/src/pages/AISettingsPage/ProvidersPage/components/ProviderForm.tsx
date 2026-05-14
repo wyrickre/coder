@@ -1,11 +1,13 @@
 import { useFormik } from "formik";
-import { type FC, useId } from "react";
+import { TrashIcon } from "lucide-react";
+import { type FC, useEffect, useId, useState } from "react";
 import { Link } from "react-router";
 import * as Yup from "yup";
 import { ErrorAlert } from "#/components/Alert/ErrorAlert";
 import { Button } from "#/components/Button/Button";
 import { Form, FormFields } from "#/components/Form/Form";
 import { FormField } from "#/components/FormField/FormField";
+import { Input } from "#/components/Input/Input";
 import { Label } from "#/components/Label/Label";
 import {
 	Select,
@@ -17,6 +19,7 @@ import {
 import { Spinner } from "#/components/Spinner/Spinner";
 import { Switch } from "#/components/Switch/Switch";
 import { ProviderIcon } from "#/pages/AISettingsPage/ProvidersPage/components/ProviderIcon";
+import { isCredentialPlaceholder } from "#/pages/AISettingsPage/ProvidersPage/components/providerCredentialPlaceholder";
 import { cn } from "#/utils/cn";
 import { getFormHelpers } from "#/utils/formUtils";
 
@@ -36,6 +39,9 @@ export type ProviderFormValues = {
 // https://bedrock-runtime.us-east-2.amazonaws.com
 const bedrockRuntimeBaseUrlRegex =
 	/^https:\/\/bedrock-runtime\.[a-z0-9-]+\.amazonaws\.com\/?$/i;
+
+/** Dummy value so read-only password inputs show a stable mask (not real credentials). */
+const BEDROCK_OMITTED_CREDENTIAL_DISPLAY = "********";
 
 const defaultInitialValues: ProviderFormValues = {
 	type: "anthropic",
@@ -58,33 +64,57 @@ const openaiAnthropicSchema = Yup.object({
 	enabled: Yup.boolean(),
 });
 
-const bedrockSchema = Yup.object({
-	type: Yup.string()
-		.oneOf(["bedrock"] as const)
-		.required(),
-	name: Yup.string().required("Name is required"),
-	baseUrl: Yup.string()
-		.url("Base URL must be a valid URL")
-		.matches(
-			bedrockRuntimeBaseUrlRegex,
-			"Base URL must be a valid Bedrock Runtime API base URL",
-		)
-		.required("Base URL is required"),
-	model: Yup.string().required("Model is required"),
-	smallFastModel: Yup.string().required("Small fast model is required"),
-	accessKey: Yup.string().required("Access key is required"),
-	accessKeySecret: Yup.string().required("Access key secret is required"),
-	enabled: Yup.boolean(),
-});
+const makeBedrockSchema = (editing: boolean) => {
+	const base = Yup.object({
+		type: Yup.string()
+			.oneOf(["bedrock"] as const)
+			.required(),
+		name: Yup.string().required("Name is required"),
+		baseUrl: Yup.string()
+			.url("Base URL must be a valid URL")
+			.matches(
+				bedrockRuntimeBaseUrlRegex,
+				"Base URL must be a valid Bedrock Runtime API base URL",
+			)
+			.required("Base URL is required"),
+		model: Yup.string().required("Model is required"),
+		smallFastModel: Yup.string().required("Small fast model is required"),
+		accessKey: editing
+			? Yup.string()
+			: Yup.string().required("Access key is required"),
+		accessKeySecret: editing
+			? Yup.string()
+			: Yup.string().required("Access key secret is required"),
+		enabled: Yup.boolean(),
+	});
+	if (!editing) {
+		return base;
+	}
+	return base.test(
+		"bedrock-access-keys-pair",
+		"Replace access key and secret together, or leave both blank or as the saved placeholders.",
+		(value) => {
+			const kp = isCredentialPlaceholder(value.accessKey ?? "");
+			const sp = isCredentialPlaceholder(value.accessKeySecret ?? "");
+			if (kp && sp) {
+				return true;
+			}
+			if (!kp && !sp) {
+				return true;
+			}
+			return false;
+		},
+	);
+};
 
-export const providerFormSchema = Yup.lazy(
-	(value: { type?: string } | undefined) => {
+export const getProviderFormSchema = (editing: boolean) =>
+	Yup.lazy((value: { type?: string } | undefined) => {
 		switch (value?.type) {
 			case "openai":
 			case "anthropic":
 				return openaiAnthropicSchema;
 			case "bedrock":
-				return bedrockSchema;
+				return makeBedrockSchema(editing);
 			default:
 				return Yup.object({
 					type: Yup.string()
@@ -92,11 +122,15 @@ export const providerFormSchema = Yup.lazy(
 						.required(),
 				});
 		}
-	},
-);
+	});
+
+/** Schema for add-provider flow (Bedrock access fields required). */
+export const providerFormSchema = getProviderFormSchema(false);
 
 type ProviderFormProps = {
 	editing?: boolean;
+	/** When editing Bedrock and the API already has keys, show masked placeholders until cleared. */
+	bedrockSavedAccessCredentials?: boolean;
 	initialValues?: Partial<ProviderFormValues>;
 	onSubmit?: (values: ProviderFormValues) => void;
 	isLoading?: boolean;
@@ -105,6 +139,7 @@ type ProviderFormProps = {
 
 export const ProviderForm: FC<ProviderFormProps> = ({
 	editing = false,
+	bedrockSavedAccessCredentials = false,
 	initialValues,
 	onSubmit,
 	isLoading = false,
@@ -112,10 +147,23 @@ export const ProviderForm: FC<ProviderFormProps> = ({
 }) => {
 	const typeSelectId = useId();
 	const enabledSwitchId = useId();
+	const omittedAccessKeyId = useId();
+	const omittedSecretId = useId();
+
+	const [bedrockKeysUnlocked, setBedrockKeysUnlocked] = useState(
+		() => !bedrockSavedAccessCredentials,
+	);
+
+	useEffect(() => {
+		setBedrockKeysUnlocked(!bedrockSavedAccessCredentials);
+	}, [bedrockSavedAccessCredentials]);
+
+	const showBedrockOmittedCredentials =
+		editing && bedrockSavedAccessCredentials && !bedrockKeysUnlocked;
 
 	const form = useFormik<ProviderFormValues>({
 		initialValues: { ...defaultInitialValues, ...initialValues },
-		validationSchema: providerFormSchema,
+		validationSchema: getProviderFormSchema(editing),
 		onSubmit: onSubmit ?? (() => {}),
 		enableReinitialize: initialValues !== undefined,
 	});
@@ -234,18 +282,73 @@ export const ProviderForm: FC<ProviderFormProps> = ({
 							label="Small fast model"
 							className="w-full"
 						/>
-						<FormField
-							field={getFieldHelpers("accessKey")}
-							label="Access key"
-							className="w-full"
-						/>
-						<FormField
-							field={getFieldHelpers("accessKeySecret")}
-							label="Access key secret"
-							type="password"
-							className="w-full"
-							autoComplete="new-password"
-						/>
+						{showBedrockOmittedCredentials ? (
+							<div className="flex flex-col gap-4">
+								<p className="m-0 text-xs text-content-secondary">
+									A saved access key and secret are on file. Clear them to enter
+									new credentials.
+								</p>
+								<div className="flex flex-col gap-2">
+									<Label htmlFor={omittedAccessKeyId}>Access key</Label>
+									<Input
+										id={omittedAccessKeyId}
+										type="password"
+										readOnly
+										tabIndex={-1}
+										value={BEDROCK_OMITTED_CREDENTIAL_DISPLAY}
+										autoComplete="off"
+										aria-label="Access key on file (hidden)"
+										className="text-content-secondary"
+									/>
+								</div>
+								<div className="flex flex-col gap-2">
+									<Label htmlFor={omittedSecretId}>Access key secret</Label>
+									<Input
+										id={omittedSecretId}
+										type="password"
+										readOnly
+										tabIndex={-1}
+										value={BEDROCK_OMITTED_CREDENTIAL_DISPLAY}
+										autoComplete="off"
+										aria-label="Access key secret on file (hidden)"
+										className="text-content-secondary"
+									/>
+								</div>
+								<Button
+									type="button"
+									variant="outline"
+									className="self-start"
+									onClick={() => {
+										void form.setFieldValue("accessKey", "");
+										void form.setFieldValue("accessKeySecret", "");
+										setBedrockKeysUnlocked(true);
+									}}
+								>
+									<TrashIcon />
+									<span>Reset keys</span>
+								</Button>
+							</div>
+						) : (
+							<>
+								<FormField
+									field={getFieldHelpers("accessKey")}
+									label="Access key"
+									description={
+										editing && bedrockKeysUnlocked
+											? "Enter a new access key and secret together."
+											: undefined
+									}
+									className="w-full"
+								/>
+								<FormField
+									field={getFieldHelpers("accessKeySecret")}
+									label="Access key secret"
+									type="password"
+									className="w-full"
+									autoComplete="new-password"
+								/>
+							</>
+						)}
 					</>
 				)}
 

@@ -1,5 +1,6 @@
 import { isAxiosError } from "axios";
 import { ArrowLeftIcon } from "lucide-react";
+import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "react-query";
 import { Link, Navigate, useParams } from "react-router";
 import { toast } from "sonner";
@@ -19,12 +20,15 @@ import { ProviderForm } from "../components/ProviderForm";
 import { getProviderIcon } from "../components/ProviderIcon";
 import {
 	aiProviderToFormValues,
+	hasBedrockStoredCredentials,
 	providerFormValuesToCreateRequest,
 } from "../components/providerFormApiMap";
 
 const UpdateProviderPageView: React.FC = () => {
 	const { providerId } = useParams<{ providerId: string }>();
 	const queryClient = useQueryClient();
+
+	const [providerFormKey, setProviderFormKey] = useState(0);
 
 	const providerQuery = useQuery({
 		...aiProvider(providerId ?? ""),
@@ -93,21 +97,29 @@ const UpdateProviderPageView: React.FC = () => {
 				</PageHeader>
 				<div className="border border-solid p-6 rounded-lg">
 					<ProviderForm
+						key={providerFormKey}
 						editing
+						bedrockSavedAccessCredentials={hasBedrockStoredCredentials(
+							provider,
+						)}
 						initialValues={aiProviderToFormValues(provider)}
 						isLoading={updateMutation.isPending}
 						submitError={updateMutation.error}
 						onSubmit={(values) => {
-							updateMutation.mutate(providerFormValuesToCreateRequest(values), {
-								onSuccess: () => {
-									toast.success("Provider updated.");
+							updateMutation.mutate(
+								providerFormValuesToCreateRequest(values, provider),
+								{
+									onSuccess: () => {
+										toast.success("Provider updated.");
+										setProviderFormKey((k) => k + 1);
+									},
+									onError: (error) => {
+										toast.error(
+											getErrorMessage(error, "Failed to update provider."),
+										);
+									},
 								},
-								onError: (error) => {
-									toast.error(
-										getErrorMessage(error, "Failed to update provider."),
-									);
-								},
-							});
+							);
 						}}
 					/>
 				</div>
