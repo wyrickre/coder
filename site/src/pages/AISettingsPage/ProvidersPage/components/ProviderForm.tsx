@@ -269,9 +269,6 @@ export const ProviderForm: FC<ProviderFormProps> = ({
 						/>
 						{showOpenAiAnthropicOmittedApiKey ? (
 							<div className="flex flex-col gap-4">
-								<p className="m-0 text-xs text-content-secondary">
-									A saved API key is on file. Reset it to enter a new key.
-								</p>
 								<div className="flex flex-col gap-2">
 									<Label htmlFor={omittedOpenAiApiKeyId}>API key</Label>
 									<Input
@@ -349,10 +346,6 @@ export const ProviderForm: FC<ProviderFormProps> = ({
 						/>
 						{showBedrockOmittedCredentials ? (
 							<div className="flex flex-col gap-4">
-								<p className="m-0 text-xs text-content-secondary">
-									A saved access key and secret are on file. Clear them to enter
-									new credentials.
-								</p>
 								<div className="flex flex-col gap-2">
 									<Label htmlFor={omittedAccessKeyId}>Access key</Label>
 									<Input
