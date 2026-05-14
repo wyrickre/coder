@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import type * as TypesGen from "#/api/typesGenerated";
 import {
 	Command,
@@ -21,10 +22,7 @@ export type CaretAnchorRect = {
 
 export const personalSkillTriggerText = (
 	skill: TypesGen.UserSkillMetadata,
-): string => {
-	const description = skill.description.trim();
-	return description ? `/${skill.name} (${description})` : `/${skill.name}`;
-};
+): string => `/${skill.name}`;
 
 export const filterPersonalSkills = (
 	skills: readonly TypesGen.UserSkillMetadata[],
@@ -84,6 +82,23 @@ export const PersonalSkillsTriggerMenu = ({
 	onSelect,
 	onClose,
 }: PersonalSkillsTriggerMenuProps) => {
+	const hasSelectedRef = useRef(false);
+
+	useEffect(() => {
+		if (open) {
+			hasSelectedRef.current = false;
+		}
+	}, [open]);
+
+	const handleSelect = (skill: TypesGen.UserSkillMetadata) => {
+		if (hasSelectedRef.current) {
+			return;
+		}
+
+		hasSelectedRef.current = true;
+		onSelect(skill);
+	};
+
 	const shouldRender = open && anchorRect;
 
 	return (
@@ -146,8 +161,11 @@ export const PersonalSkillsTriggerMenu = ({
 											index === selectedIndex &&
 												"bg-surface-secondary text-content-primary",
 										)}
-										onMouseDown={(event) => event.preventDefault()}
-										onSelect={() => onSelect(skill)}
+										onClick={(event) => {
+											event.preventDefault();
+											handleSelect(skill);
+										}}
+										onSelect={() => handleSelect(skill)}
 									>
 										<div className="min-w-0 space-y-1">
 											<div className="truncate font-mono text-content-primary text-xs">

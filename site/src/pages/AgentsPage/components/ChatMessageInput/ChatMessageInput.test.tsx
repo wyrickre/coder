@@ -8,7 +8,9 @@ import {
 } from "react";
 import { QueryClient, QueryClientProvider } from "react-query";
 import { describe, expect, it } from "vitest";
+import type * as TypesGen from "#/api/typesGenerated";
 import { ChatMessageInput, type ChatMessageInputRef } from "./ChatMessageInput";
+import { personalSkillTriggerText } from "./PersonalSkillsTriggerMenu";
 
 const renderWithQueryClient = (children: ReactNode) => {
 	const queryClient = new QueryClient({
@@ -102,6 +104,18 @@ describe("ChatMessageInput", () => {
 				"queued replacement",
 			);
 		});
+	});
+
+	it("formats selected personal skills without descriptions", () => {
+		const skill: TypesGen.UserSkillMetadata = {
+			id: "skill-reviewer",
+			name: "reviewer",
+			description: "Review changed files and suggest fixes.",
+			created_at: "2026-05-08T00:00:00Z",
+			updated_at: "2026-05-08T00:00:00Z",
+		};
+
+		expect(personalSkillTriggerText(skill)).toBe("/reviewer");
 	});
 
 	it("returns updated content even without an external onChange prop", async () => {

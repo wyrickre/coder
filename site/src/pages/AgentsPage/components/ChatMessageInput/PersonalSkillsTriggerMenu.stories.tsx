@@ -125,6 +125,7 @@ export const SelectsByClick: Story = {
 	},
 	play: async ({ args }) => {
 		await userEvent.click(await findVisibleText("/reviewer"));
+		expect(args.onSelect).toHaveBeenCalledTimes(1);
 		expect(args.onSelect).toHaveBeenCalledWith(mockSkills[0]);
 	},
 };

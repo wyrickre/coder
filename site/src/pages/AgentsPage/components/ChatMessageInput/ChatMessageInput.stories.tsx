@@ -129,9 +129,17 @@ export const EnterSelectsSkill: Story = {
 		await findVisibleText("/reviewer");
 		await userEvent.keyboard("{Enter}");
 		await waitFor(() => {
-			expect(editor.textContent).toBe(
-				"/reviewer (Review changed files and suggest fixes.)",
-			);
+			expect(editor.textContent).toBe("/reviewer");
+		});
+	},
+};
+
+export const ClickSelectsSkill: Story = {
+	play: async ({ canvasElement }) => {
+		const editor = await typeInEditor(canvasElement, "/rev");
+		await userEvent.click(await findVisibleText("/reviewer"));
+		await waitFor(() => {
+			expect(editor.textContent).toBe("/reviewer");
 		});
 	},
 };
