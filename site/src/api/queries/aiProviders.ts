@@ -38,3 +38,14 @@ export const updateAIProviderMutation = (
 		await queryClient.invalidateQueries({ queryKey: aiProvidersListKey });
 	},
 });
+
+export const deleteAIProviderMutation = (
+	queryClient: QueryClient,
+	providerName: string,
+) => ({
+	mutationFn: () => API.deleteProvider(providerName),
+	onSuccess: async () => {
+		await queryClient.invalidateQueries({ queryKey: aiProvidersListKey });
+		await queryClient.removeQueries({ queryKey: aiProviderKey(providerName) });
+	},
+});

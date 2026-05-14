@@ -1,16 +1,18 @@
 import { isAxiosError } from "axios";
-import { ArrowLeftIcon } from "lucide-react";
+import { ArrowLeftIcon, TrashIcon } from "lucide-react";
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "react-query";
-import { Link, Navigate, useParams } from "react-router";
+import { Link, Navigate, useNavigate, useParams } from "react-router";
 import { toast } from "sonner";
 import { getErrorMessage } from "#/api/errors";
 import {
 	aiProvider,
+	deleteAIProviderMutation,
 	updateAIProviderMutation,
 } from "#/api/queries/aiProviders";
 import { Avatar } from "#/components/Avatar/Avatar";
 import { Button } from "#/components/Button/Button";
+import { DeleteDialog } from "#/components/Dialogs/DeleteDialog/DeleteDialog";
 import { Loader } from "#/components/Loader/Loader";
 import {
 	PageHeader,
@@ -28,8 +30,10 @@ import {
 const UpdateProviderPageView: React.FC = () => {
 	const { providerId } = useParams<{ providerId: string }>();
 	const queryClient = useQueryClient();
+	const navigate = useNavigate();
 
 	const [providerFormKey, setProviderFormKey] = useState(0);
+	const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
 	const providerQuery = useQuery({
 		...aiProvider(providerId ?? ""),
@@ -38,6 +42,10 @@ const UpdateProviderPageView: React.FC = () => {
 
 	const updateMutation = useMutation(
 		updateAIProviderMutation(queryClient, providerId ?? ""),
+	);
+
+	const deleteMutation = useMutation(
+		deleteAIProviderMutation(queryClient, providerId ?? ""),
 	);
 
 	if (!providerId) {
@@ -86,7 +94,22 @@ const UpdateProviderPageView: React.FC = () => {
 				</Link>
 			</div>
 			<div className="mx-auto w-full max-w-screen-sm flex flex-col gap-6">
-				<PageHeader className="pt-6 pb-0">
+				<PageHeader
+					className="pt-6 pb-0"
+					actions={
+						<Button
+							type="button"
+							variant="destructive"
+							disabled={updateMutation.isPending || deleteMutation.isPending}
+							onClick={() => {
+								setDeleteDialogOpen(true);
+							}}
+						>
+							<TrashIcon />
+							<span>Delete provider</span>
+						</Button>
+					}
+				>
 					<div className="flex items-center gap-4">
 						<Avatar
 							variant="icon"
@@ -127,6 +150,31 @@ const UpdateProviderPageView: React.FC = () => {
 						}}
 					/>
 				</div>
+				<DeleteDialog
+					key={provider.name}
+					isOpen={deleteDialogOpen}
+					title="Delete provider"
+					entity="provider"
+					name={provider.name}
+					confirmLoading={deleteMutation.isPending}
+					onCancel={() => {
+						setDeleteDialogOpen(false);
+					}}
+					onConfirm={() => {
+						deleteMutation.mutate(undefined, {
+							onSuccess: () => {
+								toast.success("Provider deleted.");
+								setDeleteDialogOpen(false);
+								void navigate("/aisettings", { replace: true });
+							},
+							onError: (error) => {
+								toast.error(
+									getErrorMessage(error, "Failed to delete provider."),
+								);
+							},
+						});
+					}}
+				/>
 			</div>
 		</>
 	);
