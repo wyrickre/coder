@@ -116,60 +116,63 @@ export const ProviderForm: FC<ProviderFormProps> = ({
 	return (
 		<Form onSubmit={form.handleSubmit}>
 			<FormFields>
-				<div className="flex flex-col gap-2">
-					<Label htmlFor={typeSelectId}>Type</Label>
-					<div className="text-xs text-content-secondary">
-						Select the type of provider you want to connect.
+				{!editing && (
+					<div className="flex flex-col gap-2">
+						<Label htmlFor={typeSelectId}>Type</Label>
+						<div className="text-xs text-content-secondary">
+							Select the type of provider you want to connect.
+						</div>
+						<Select
+							value={typeSelectValue}
+							onValueChange={(value) => {
+								void form.setFieldValue("type", value);
+							}}
+						>
+							<SelectTrigger
+								id={typeSelectId}
+								className={cn(
+									"w-full",
+									typeField.error && "border-border-destructive",
+								)}
+								aria-invalid={typeField.error}
+								aria-describedby={
+									typeField.error ? `${typeSelectId}-error` : undefined
+								}
+							>
+								<SelectValue placeholder="Select type" />
+							</SelectTrigger>
+							<SelectContent>
+								<SelectItem value="anthropic">
+									<span className="flex items-center gap-2">
+										<ProviderIcon provider="anthropic" />
+										Anthropic
+									</span>
+								</SelectItem>
+								<SelectItem value="openai">
+									<span className="flex items-center gap-2">
+										<ProviderIcon provider="openai" />
+										OpenAI
+									</span>
+								</SelectItem>
+								<SelectItem value="bedrock">
+									<span className="flex items-center gap-2">
+										<ProviderIcon provider="bedrock" />
+										Bedrock
+									</span>
+								</SelectItem>
+							</SelectContent>
+						</Select>
+						{typeField.error ? (
+							<span
+								id={`${typeSelectId}-error`}
+								className="text-xs text-content-destructive"
+							>
+								{typeField.helperText}
+							</span>
+						) : null}
 					</div>
-					<Select
-						value={typeSelectValue}
-						onValueChange={(value) => {
-							void form.setFieldValue("type", value);
-						}}
-					>
-						<SelectTrigger
-							id={typeSelectId}
-							className={cn(
-								"w-full",
-								typeField.error && "border-border-destructive",
-							)}
-							aria-invalid={typeField.error}
-							aria-describedby={
-								typeField.error ? `${typeSelectId}-error` : undefined
-							}
-						>
-							<SelectValue placeholder="Select type" />
-						</SelectTrigger>
-						<SelectContent>
-							<SelectItem value="anthropic">
-								<span className="flex items-center gap-2">
-									<ProviderIcon provider="anthropic" />
-									Anthropic
-								</span>
-							</SelectItem>
-							<SelectItem value="openai">
-								<span className="flex items-center gap-2">
-									<ProviderIcon provider="openai" />
-									OpenAI
-								</span>
-							</SelectItem>
-							<SelectItem value="bedrock">
-								<span className="flex items-center gap-2">
-									<ProviderIcon provider="bedrock" />
-									Bedrock
-								</span>
-							</SelectItem>
-						</SelectContent>
-					</Select>
-					{typeField.error ? (
-						<span
-							id={`${typeSelectId}-error`}
-							className="text-xs text-content-destructive"
-						>
-							{typeField.helperText}
-						</span>
-					) : null}
-				</div>
+				)}
+
 				{(typeSelectValue === "openai" || typeSelectValue === "anthropic") && (
 					<>
 						<FormField
