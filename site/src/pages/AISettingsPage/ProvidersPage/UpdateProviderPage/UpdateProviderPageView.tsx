@@ -32,7 +32,6 @@ const UpdateProviderPageView: React.FC = () => {
 	const queryClient = useQueryClient();
 	const navigate = useNavigate();
 
-	const [providerFormKey, setProviderFormKey] = useState(0);
 	const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
 	const providerQuery = useQuery({
@@ -121,7 +120,6 @@ const UpdateProviderPageView: React.FC = () => {
 				</PageHeader>
 				<div className="border border-solid p-6 rounded-lg">
 					<ProviderForm
-						key={providerFormKey}
 						editing
 						bedrockSavedAccessCredentials={hasBedrockStoredCredentials(
 							provider,
@@ -138,7 +136,6 @@ const UpdateProviderPageView: React.FC = () => {
 								{
 									onSuccess: () => {
 										toast.success(`Provider "${provider.name}" updated.`);
-										setProviderFormKey((k) => k + 1);
 									},
 									onError: (error) => {
 										toast.error(
