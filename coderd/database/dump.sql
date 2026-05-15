@@ -16,6 +16,7 @@ CREATE TYPE ai_provider_type AS ENUM (
     'azure',
     'bedrock',
     'google',
+    'openai-compat',
     'openrouter',
     'vercel'
 );

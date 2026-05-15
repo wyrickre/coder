@@ -19,15 +19,16 @@ type AIProviderType string
 const (
 	AIProviderTypeOpenAI    AIProviderType = "openai"
 	AIProviderTypeAnthropic AIProviderType = "anthropic"
-	// AIProviderTypeAzure, AIProviderTypeGoogle, AIProviderTypeOpenrouter,
-	// and AIProviderTypeVercel route through aibridge's OpenAI client today
-	// because chatd configures these providers against their
-	// OpenAI-compatible endpoints. Native gateway-side support arrives
-	// later without an enum change.
-	AIProviderTypeAzure      AIProviderType = "azure"
-	AIProviderTypeGoogle     AIProviderType = "google"
-	AIProviderTypeOpenrouter AIProviderType = "openrouter"
-	AIProviderTypeVercel     AIProviderType = "vercel"
+	// AIProviderTypeAzure, AIProviderTypeGoogle, AIProviderTypeOpenAICompat,
+	// AIProviderTypeOpenrouter, and AIProviderTypeVercel route through
+	// aibridge's OpenAI client today because chatd configures these
+	// providers against their OpenAI-compatible endpoints. Native
+	// gateway-side support arrives later without an enum change.
+	AIProviderTypeAzure        AIProviderType = "azure"
+	AIProviderTypeGoogle       AIProviderType = "google"
+	AIProviderTypeOpenAICompat AIProviderType = "openai-compat"
+	AIProviderTypeOpenrouter   AIProviderType = "openrouter"
+	AIProviderTypeVercel       AIProviderType = "vercel"
 	// AIProviderTypeBedrock routes through aibridge's Anthropic client
 	// using the Bedrock discriminator in Settings; native support is
 	// future work.

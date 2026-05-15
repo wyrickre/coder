@@ -588,6 +588,7 @@ func validateCreateAIProviderRequest(req codersdk.CreateAIProviderRequest) []cod
 		codersdk.AIProviderTypeAzure,
 		codersdk.AIProviderTypeBedrock,
 		codersdk.AIProviderTypeGoogle,
+		codersdk.AIProviderTypeOpenAICompat,
 		codersdk.AIProviderTypeOpenrouter,
 		codersdk.AIProviderTypeVercel:
 	case "":
@@ -596,7 +597,7 @@ func validateCreateAIProviderRequest(req codersdk.CreateAIProviderRequest) []cod
 		validations = append(validations, codersdk.ValidationError{
 			Field: "type",
 			Detail: fmt.Sprintf(
-				"unsupported provider type %q; expected one of: openai, anthropic, azure, bedrock, google, openrouter, vercel",
+				"unsupported provider type %q; expected one of: openai, anthropic, azure, bedrock, google, openai-compat, openrouter, vercel",
 				req.Type,
 			),
 		})

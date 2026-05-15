@@ -13275,6 +13275,7 @@
 				"anthropic",
 				"azure",
 				"google",
+				"openai-compat",
 				"openrouter",
 				"vercel",
 				"bedrock"
@@ -13284,6 +13285,7 @@
 				"AIProviderTypeAnthropic",
 				"AIProviderTypeAzure",
 				"AIProviderTypeGoogle",
+				"AIProviderTypeOpenAICompat",
 				"AIProviderTypeOpenrouter",
 				"AIProviderTypeVercel",
 				"AIProviderTypeBedrock"

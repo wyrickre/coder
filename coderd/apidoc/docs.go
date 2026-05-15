@@ -14845,6 +14845,7 @@ const docTemplate = `{
                 "anthropic",
                 "azure",
                 "google",
+                "openai-compat",
                 "openrouter",
                 "vercel",
                 "bedrock"
@@ -14854,6 +14855,7 @@ const docTemplate = `{
                 "AIProviderTypeAnthropic",
                 "AIProviderTypeAzure",
                 "AIProviderTypeGoogle",
+                "AIProviderTypeOpenAICompat",
                 "AIProviderTypeOpenrouter",
                 "AIProviderTypeVercel",
                 "AIProviderTypeBedrock"

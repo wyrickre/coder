@@ -430,6 +430,7 @@ export type AIProviderType =
 	| "bedrock"
 	| "google"
 	| "openai"
+	| "openai-compat"
 	| "openrouter"
 	| "vercel";
 
@@ -439,6 +440,7 @@ export const AIProviderTypes: AIProviderType[] = [
 	"bedrock",
 	"google",
 	"openai",
+	"openai-compat",
 	"openrouter",
 	"vercel",
 ];

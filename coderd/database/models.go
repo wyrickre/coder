@@ -19,13 +19,14 @@ import (
 type AIProviderType string
 
 const (
-	AiProviderTypeOpenai     AIProviderType = "openai"
-	AiProviderTypeAnthropic  AIProviderType = "anthropic"
-	AiProviderTypeAzure      AIProviderType = "azure"
-	AiProviderTypeBedrock    AIProviderType = "bedrock"
-	AiProviderTypeGoogle     AIProviderType = "google"
-	AiProviderTypeOpenrouter AIProviderType = "openrouter"
-	AiProviderTypeVercel     AIProviderType = "vercel"
+	AiProviderTypeOpenai       AIProviderType = "openai"
+	AiProviderTypeAnthropic    AIProviderType = "anthropic"
+	AiProviderTypeAzure        AIProviderType = "azure"
+	AiProviderTypeBedrock      AIProviderType = "bedrock"
+	AiProviderTypeGoogle       AIProviderType = "google"
+	AiProviderTypeOpenaiCompat AIProviderType = "openai-compat"
+	AiProviderTypeOpenrouter   AIProviderType = "openrouter"
+	AiProviderTypeVercel       AIProviderType = "vercel"
 )
 
 func (e *AIProviderType) Scan(src interface{}) error {
@@ -70,6 +71,7 @@ func (e AIProviderType) Valid() bool {
 		AiProviderTypeAzure,
 		AiProviderTypeBedrock,
 		AiProviderTypeGoogle,
+		AiProviderTypeOpenaiCompat,
 		AiProviderTypeOpenrouter,
 		AiProviderTypeVercel:
 		return true
@@ -84,6 +86,7 @@ func AllAIProviderTypeValues() []AIProviderType {
 		AiProviderTypeAzure,
 		AiProviderTypeBedrock,
 		AiProviderTypeGoogle,
+		AiProviderTypeOpenaiCompat,
 		AiProviderTypeOpenrouter,
 		AiProviderTypeVercel,
 	}
