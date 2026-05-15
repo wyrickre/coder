@@ -1,21 +1,13 @@
 import { PlusIcon } from "lucide-react";
-import { useLayoutEffect, useState } from "react";
-import { Link, useNavigate } from "react-router";
+import { useLayoutEffect } from "react";
+import { Link, useNavigate, useSearchParams } from "react-router";
 import type { AIProvider, Organization } from "#/api/typesGenerated";
-import { Avatar } from "#/components/Avatar/Avatar";
 import { Button } from "#/components/Button/Button";
 import {
 	PageHeader,
 	PageHeaderSubtitle,
 	PageHeaderTitle,
 } from "#/components/PageHeader/PageHeader";
-import {
-	Select,
-	SelectContent,
-	SelectItem,
-	SelectTrigger,
-	SelectValue,
-} from "#/components/Select/Select";
 import {
 	Table,
 	TableBody,
@@ -25,6 +17,7 @@ import {
 } from "#/components/Table/Table";
 import { TableEmpty } from "#/components/TableEmpty/TableEmpty";
 import { TableLoader } from "#/components/TableLoader/TableLoader";
+import { OrganizationPicker } from "#/pages/AISettingsPage/ProvidersPage/components/OrganizationPicker";
 import { ProviderRow } from "#/pages/AISettingsPage/ProvidersPage/components/ProviderRow";
 
 interface ProvidersPageViewProps {
@@ -34,6 +27,8 @@ interface ProvidersPageViewProps {
 	organizations: Organization[] | undefined;
 }
 
+const ORGANIZATION_QUERY_PARAM = "organizationId";
+
 const ProvidersPageView: React.FC<ProvidersPageViewProps> = ({
 	isLoading,
 	isFetching,
@@ -42,24 +37,51 @@ const ProvidersPageView: React.FC<ProvidersPageViewProps> = ({
 }) => {
 	const navigate = useNavigate();
 	// TODO: GET /api/v2/ai/providers does not yet accept an organization
-	// filter, so this picker is presentational only. Wire `selectedOrganizationId`
-	// into the query (or the URL) once the server supports scoping.
-	const [selectedOrganizationId, setSelectedOrganizationId] = useState("");
+	// filter, so the selected org only drives URL state today. Once the
+	// server supports scoping, plumb `selectedOrganizationId` through the
+	// aiProvidersList query.
+	const [searchParams, setSearchParams] = useSearchParams();
+	const selectedOrganizationId = searchParams.get(ORGANIZATION_QUERY_PARAM);
 
+	// Default the picker to the first org when the URL has no
+	// `organizationId` (or points at one the user can no longer see). We use
+	// useLayoutEffect so the URL update happens in the same paint as the
+	// initial render and downstream pages reading the param see a stable
+	// value.
 	useLayoutEffect(() => {
 		if (!organizations?.length) {
-			setSelectedOrganizationId("");
 			return;
 		}
-		setSelectedOrganizationId((prev) => {
-			if (prev && organizations.some((o) => o.id === prev)) {
-				return prev;
-			}
-			return organizations[0].id;
-		});
-	}, [organizations]);
+		const present =
+			selectedOrganizationId !== null &&
+			organizations.some((o) => o.id === selectedOrganizationId);
+		if (present) {
+			return;
+		}
+		setSearchParams(
+			(prev) => {
+				const next = new URLSearchParams(prev);
+				next.set(ORGANIZATION_QUERY_PARAM, organizations[0].id);
+				return next;
+			},
+			{ replace: true },
+		);
+	}, [organizations, selectedOrganizationId, setSearchParams]);
 
-	const hasOrganizations = Boolean(organizations?.length);
+	const handleSelectOrganization = (id: string) => {
+		setSearchParams(
+			(prev) => {
+				const next = new URLSearchParams(prev);
+				next.set(ORGANIZATION_QUERY_PARAM, id);
+				return next;
+			},
+			{ replace: true },
+		);
+	};
+
+	const addHref = selectedOrganizationId
+		? `/ai/settings/add?${ORGANIZATION_QUERY_PARAM}=${encodeURIComponent(selectedOrganizationId)}`
+		: "/ai/settings/add";
 
 	return (
 		<>
@@ -67,35 +89,12 @@ const ProvidersPageView: React.FC<ProvidersPageViewProps> = ({
 				className="pt-4 pb-8"
 				actions={
 					<>
-						<Select
-							value={hasOrganizations ? selectedOrganizationId : undefined}
-							onValueChange={setSelectedOrganizationId}
-							disabled={!hasOrganizations}
-						>
-							<SelectTrigger className="w-56 min-w-0">
-								<SelectValue placeholder="Select organization" />
-							</SelectTrigger>
-							<SelectContent>
-								{organizations?.map((organization) => (
-									<SelectItem key={organization.id} value={organization.id}>
-										<span className="flex items-center gap-2">
-											<Avatar
-												variant="icon"
-												size="sm"
-												src={organization.icon}
-												fallback={
-													organization.display_name || organization.name
-												}
-											/>
-											<span className="truncate">
-												{organization.display_name || organization.name}
-											</span>
-										</span>
-									</SelectItem>
-								))}
-							</SelectContent>
-						</Select>
-						<Link to="/ai/settings/add">
+						<OrganizationPicker
+							organizations={organizations}
+							value={selectedOrganizationId ?? ""}
+							onValueChange={handleSelectOrganization}
+						/>
+						<Link to={addHref}>
 							<Button>
 								<PlusIcon />
 								<span>Add provider</span>
@@ -128,7 +127,13 @@ const ProvidersPageView: React.FC<ProvidersPageViewProps> = ({
 							<ProviderRow
 								key={provider.name}
 								provider={provider}
-								onClick={() => navigate(`/ai/settings/${provider.name}`)}
+								onClick={() =>
+									navigate(
+										selectedOrganizationId
+											? `/ai/settings/${provider.name}?${ORGANIZATION_QUERY_PARAM}=${encodeURIComponent(selectedOrganizationId)}`
+											: `/ai/settings/${provider.name}`,
+									)
+								}
 							/>
 						))
 					)}

@@ -2,7 +2,13 @@ import { isAxiosError } from "axios";
 import { ArrowLeftIcon, TrashIcon } from "lucide-react";
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "react-query";
-import { Link, Navigate, useNavigate, useParams } from "react-router";
+import {
+	Link,
+	Navigate,
+	useNavigate,
+	useParams,
+	useSearchParams,
+} from "react-router";
 import { toast } from "sonner";
 import { getErrorMessage } from "#/api/errors";
 import {
@@ -11,7 +17,7 @@ import {
 	deleteAIProviderMutation,
 	updateAIProviderMutation,
 } from "#/api/queries/aiProviders";
-import type { AIProviderKey } from "#/api/typesGenerated";
+import type { AIProviderKey, Organization } from "#/api/typesGenerated";
 import { Avatar } from "#/components/Avatar/Avatar";
 import { Button } from "#/components/Button/Button";
 import { DeleteDialog } from "#/components/Dialogs/DeleteDialog/DeleteDialog";
@@ -20,6 +26,7 @@ import {
 	PageHeader,
 	PageHeaderTitle,
 } from "#/components/PageHeader/PageHeader";
+import { OrganizationPicker } from "../components/OrganizationPicker";
 import { ProviderForm } from "../components/ProviderForm";
 import { getProviderIcon } from "../components/ProviderIcon";
 import {
@@ -28,6 +35,12 @@ import {
 	isBedrockProvider,
 	providerFormValuesToUpdate,
 } from "../components/providerFormApiMap";
+
+const ORGANIZATION_QUERY_PARAM = "organizationId";
+
+interface UpdateProviderPageViewProps {
+	organizations: Organization[] | undefined;
+}
 
 /**
  * The wire API supports many keys per provider, but we sort by created_at
@@ -43,10 +56,18 @@ const pickCurrentKey = (
 	);
 };
 
-const UpdateProviderPageView: React.FC = () => {
+const UpdateProviderPageView: React.FC<UpdateProviderPageViewProps> = ({
+	organizations,
+}) => {
 	const { providerId } = useParams<{ providerId: string }>();
 	const queryClient = useQueryClient();
 	const navigate = useNavigate();
+	const [searchParams] = useSearchParams();
+	// TODO: AI providers are not yet organization-scoped on the wire, so the
+	// org id is round-tripped in the URL only. The picker below is rendered
+	// as disabled to surface which org context the user arrived from without
+	// implying they can reassign it.
+	const selectedOrganizationId = searchParams.get(ORGANIZATION_QUERY_PARAM);
 
 	const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
@@ -75,8 +96,12 @@ const UpdateProviderPageView: React.FC = () => {
 		deleteAIProviderMutation(queryClient, providerId ?? ""),
 	);
 
+	const backHref = selectedOrganizationId
+		? `/ai/settings?${ORGANIZATION_QUERY_PARAM}=${encodeURIComponent(selectedOrganizationId)}`
+		: "/ai/settings";
+
 	if (!providerId) {
-		return <Navigate to="/ai/settings" replace />;
+		return <Navigate to={backHref} replace />;
 	}
 
 	if (providerQuery.isLoading) {
@@ -88,14 +113,14 @@ const UpdateProviderPageView: React.FC = () => {
 			? providerQuery.error.response?.status
 			: undefined;
 		if (status === 404) {
-			return <Navigate to="/ai/settings" replace />;
+			return <Navigate to={backHref} replace />;
 		}
 		return (
 			<div className="pt-4 px-6 flex flex-col gap-4">
 				<p className="text-content-secondary">
 					{getErrorMessage(providerQuery.error, "Failed to load provider.")}
 				</p>
-				<Link to="/ai/settings">
+				<Link to={backHref}>
 					<Button variant="subtle">
 						<ArrowLeftIcon />
 						<span>Back to providers</span>
@@ -106,7 +131,7 @@ const UpdateProviderPageView: React.FC = () => {
 	}
 
 	if (!provider) {
-		return <Navigate to="/ai/settings" replace />;
+		return <Navigate to={backHref} replace />;
 	}
 
 	// The keys query only fires for openai/anthropic, and `ProviderForm` seeds
@@ -127,7 +152,7 @@ const UpdateProviderPageView: React.FC = () => {
 	return (
 		<>
 			<div className="pt-4 px-6">
-				<Link to="/ai/settings">
+				<Link to={backHref}>
 					<Button variant="subtle">
 						<ArrowLeftIcon />
 						<span>Back to providers</span>
@@ -138,17 +163,25 @@ const UpdateProviderPageView: React.FC = () => {
 				<PageHeader
 					className="pt-6 pb-0"
 					actions={
-						<Button
-							type="button"
-							variant="destructive"
-							disabled={updateMutation.isPending || deleteMutation.isPending}
-							onClick={() => {
-								setDeleteDialogOpen(true);
-							}}
-						>
-							<TrashIcon />
-							<span>Delete provider</span>
-						</Button>
+						<>
+							<OrganizationPicker
+								organizations={organizations}
+								value={selectedOrganizationId ?? ""}
+								disabled
+								ariaLabel="Provider organization"
+							/>
+							<Button
+								type="button"
+								variant="destructive"
+								disabled={updateMutation.isPending || deleteMutation.isPending}
+								onClick={() => {
+									setDeleteDialogOpen(true);
+								}}
+							>
+								<TrashIcon />
+								<span>Delete provider</span>
+							</Button>
+						</>
 					}
 				>
 					<div className="flex items-center gap-4">
@@ -221,7 +254,7 @@ const UpdateProviderPageView: React.FC = () => {
 							onSuccess: () => {
 								toast.success(`Provider "${provider.name}" deleted.`);
 								setDeleteDialogOpen(false);
-								void navigate("/ai/settings", { replace: true });
+								void navigate(backHref, { replace: true });
 							},
 							onError: (error) => {
 								toast.error(
