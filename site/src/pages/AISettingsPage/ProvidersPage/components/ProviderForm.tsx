@@ -305,8 +305,8 @@ export const ProviderForm: FC<ProviderFormProps> = ({
 								type="password"
 								description={
 									editing && !openAiAnthropicApiKeyMasked
-										? "Submitting replaces the existing key."
-										: undefined
+										? "Secret key used to authenticate requests to this provider, submitting replaces the existing key."
+										: "Secret key used to authenticate requests to this provider."
 								}
 								className="w-full"
 								autoComplete="new-password"
