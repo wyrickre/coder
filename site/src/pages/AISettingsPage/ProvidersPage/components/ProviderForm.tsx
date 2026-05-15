@@ -158,6 +158,12 @@ type CredentialFieldProps = {
 	placeholder?: string;
 	description?: ReactNode;
 	required?: boolean;
+	/**
+	 * Disables the input while keeping the trash button clickable. Used for
+	 * the seeded-mask state: until the user presses trash, the credential
+	 * input is locked at `********` so they can't accidentally edit it.
+	 */
+	disabled?: boolean;
 	trashLabel: string;
 	/**
 	 * - `"flex"` (default) renders the field as a self-contained stack: label
@@ -192,6 +198,7 @@ const CredentialField: FC<CredentialFieldProps> = ({
 	placeholder,
 	description,
 	required = false,
+	disabled = false,
 	trashLabel,
 	layout = "flex",
 }) => {
@@ -241,6 +248,7 @@ const CredentialField: FC<CredentialFieldProps> = ({
 			type={inputType}
 			autoComplete={autoComplete}
 			placeholder={placeholder}
+			disabled={disabled}
 			aria-invalid={helpers.error}
 			aria-describedby={describedBy || undefined}
 			className={cn("w-full", helpers.error && "border-border-destructive")}
@@ -251,7 +259,7 @@ const CredentialField: FC<CredentialFieldProps> = ({
 		<Button
 			type="button"
 			variant="destructive"
-			size="icon"
+			size="icon-lg"
 			onClick={onClear}
 			aria-label={trashLabel}
 		>
@@ -265,8 +273,8 @@ const CredentialField: FC<CredentialFieldProps> = ({
 			<>
 				<div className="pt-2.5">{labelNode}</div>
 				<div className="flex flex-col gap-2">
-					{descriptionNode}
 					{inputNode}
+					{descriptionNode}
 					{helperNode}
 				</div>
 				{trashNode}
@@ -346,21 +354,30 @@ export const ProviderForm: FC<ProviderFormProps> = ({
 	const typeSelectId = useId();
 	const enabledSwitchId = useId();
 
-	// While editing Bedrock, the access key (not secret) input swaps between
-	// password dots (when a credential is already on file and the user hasn't
-	// cleared it) and plain text (so the user can see what they're typing).
-	// Both Bedrock fields and the openai/anthropic API key field always render
-	// as password dots regardless, so they don't need their own mask state.
-	// Clearing any of them via the trash button just empties the form value;
-	// the mask boolean below tracks whether to keep treating the access key
-	// value as opaque.
+	// While editing, each credential input is locked at its seeded mask until
+	// the user presses the trash button next to it; pressing trash flips the
+	// mask boolean off and empties the form value so the user can type a
+	// replacement. We track one boolean per field rather than one shared flag
+	// so a user can clear (and re-enter) just one half of a paired credential.
+	// The Bedrock access key (not the secret or the API key) also swaps from
+	// password dots back to plain text once cleared so the user can see what
+	// they're typing.
 	const [bedrockAccessKeyMasked, setBedrockAccessKeyMasked] = useState(
 		() => bedrockSavedAccessCredentials,
 	);
+	const [bedrockAccessKeySecretMasked, setBedrockAccessKeySecretMasked] =
+		useState(() => bedrockSavedAccessCredentials);
+	const [openAiAnthropicApiKeyMasked, setOpenAiAnthropicApiKeyMasked] =
+		useState(() => openAiAnthropicSavedApiKey);
 
 	useEffect(() => {
 		setBedrockAccessKeyMasked(bedrockSavedAccessCredentials);
+		setBedrockAccessKeySecretMasked(bedrockSavedAccessCredentials);
 	}, [bedrockSavedAccessCredentials]);
+
+	useEffect(() => {
+		setOpenAiAnthropicApiKeyMasked(openAiAnthropicSavedApiKey);
+	}, [openAiAnthropicSavedApiKey]);
 
 	const form = useFormik<ProviderFormValues>({
 		initialValues: {
@@ -394,10 +411,12 @@ export const ProviderForm: FC<ProviderFormProps> = ({
 
 	const clearBedrockAccessKeySecret = () => {
 		void form.setFieldValue("accessKeySecret", "");
+		setBedrockAccessKeySecretMasked(false);
 	};
 
 	const clearOpenAiAnthropicApiKey = () => {
 		void form.setFieldValue("apiKey", "");
+		setOpenAiAnthropicApiKeyMasked(false);
 	};
 
 	return (
@@ -484,6 +503,7 @@ export const ProviderForm: FC<ProviderFormProps> = ({
 							autoComplete="new-password"
 							description="Secret key used to authenticate requests to this provider."
 							placeholder={apiKeyPlaceholder(form.values.type)}
+							disabled={openAiAnthropicApiKeyMasked}
 							trashLabel="Remove saved API key"
 						/>
 						<FormField
@@ -564,6 +584,7 @@ export const ProviderForm: FC<ProviderFormProps> = ({
 								// cleared so the typed key is visible.
 								inputType={bedrockAccessKeyMasked ? "password" : "text"}
 								description="Your AWS Access Key ID used to authenticate requests to Bedrock."
+								disabled={bedrockAccessKeyMasked}
 								trashLabel="Remove saved access key"
 								layout="grid-row"
 							/>
@@ -575,6 +596,7 @@ export const ProviderForm: FC<ProviderFormProps> = ({
 								inputType="password"
 								autoComplete="new-password"
 								description="Your AWS Secret Access Key associated with the access key ID. Stored securely and used for request signing."
+								disabled={bedrockAccessKeySecretMasked}
 								trashLabel="Remove saved access key secret"
 								layout="grid-row"
 							/>
