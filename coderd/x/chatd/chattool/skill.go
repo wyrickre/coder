@@ -301,12 +301,7 @@ func ReadSkill(options ReadSkillOptions) fantasy.AgentTool {
 
 			resolved, err := resolveSkillAlias(options, args.Name)
 			if err != nil {
-				if xerrors.Is(err, skillspkg.ErrSkillNotFound) {
-					return skillNotFoundResponse(args.Name), nil
-				}
-				return fantasy.NewTextErrorResponse(
-					fmt.Sprintf("failed to resolve skill %q", args.Name),
-				), nil
+				return skillResolveErrorResponse(args.Name, err), nil
 			}
 
 			switch resolved.Source {
@@ -375,12 +370,7 @@ func ReadSkillFile(options ReadSkillOptions) fantasy.AgentTool {
 
 			resolved, err := resolveSkillAlias(options, args.Name)
 			if err != nil {
-				if xerrors.Is(err, skillspkg.ErrSkillNotFound) {
-					return skillNotFoundResponse(args.Name), nil
-				}
-				return fantasy.NewTextErrorResponse(
-					fmt.Sprintf("failed to resolve skill %q", args.Name),
-				), nil
+				return skillResolveErrorResponse(args.Name, err), nil
 			}
 			if resolved.Source == skillspkg.SourcePersonal {
 				return fantasy.NewTextErrorResponse(
@@ -481,6 +471,18 @@ func readWorkspaceSkillBody(
 		return SkillContent{}, &response
 	}
 	return content, nil
+}
+
+func skillResolveErrorResponse(name string, err error) fantasy.ToolResponse {
+	if xerrors.Is(err, skillspkg.ErrSkillNotFound) {
+		return skillNotFoundResponse(name)
+	}
+	if xerrors.Is(err, skillspkg.ErrSkillAmbiguous) {
+		return fantasy.NewTextErrorResponse(err.Error())
+	}
+	return fantasy.NewTextErrorResponse(
+		fmt.Sprintf("failed to resolve skill %q", name),
+	)
 }
 
 func skillNotFoundResponse(name string) fantasy.ToolResponse {

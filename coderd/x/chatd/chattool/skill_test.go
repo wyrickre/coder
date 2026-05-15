@@ -653,6 +653,26 @@ func TestReadSkillTool(t *testing.T) {
 		assert.NotContains(t, resp.Content, "synthetic private resolver failure")
 	})
 
+	t.Run("AmbiguousLookupSurfacesAliases", func(t *testing.T) {
+		t.Parallel()
+
+		tool := chattool.ReadSkill(chattool.ReadSkillOptions{
+			ResolveAlias: ambiguousResolveAliasForTest,
+		})
+
+		resp, err := tool.Run(context.Background(), fantasy.ToolCall{
+			ID:    "call-1",
+			Name:  "read_skill",
+			Input: `{"name":"deploy"}`,
+		})
+
+		require.NoError(t, err)
+		assert.True(t, resp.IsError)
+		assert.Contains(t, resp.Content, "skill lookup is ambiguous")
+		assert.Contains(t, resp.Content, "personal/deploy")
+		assert.Contains(t, resp.Content, "workspace/deploy")
+	})
+
 	t.Run("UnknownSkill", func(t *testing.T) {
 		t.Parallel()
 
@@ -694,6 +714,19 @@ func TestReadSkillTool(t *testing.T) {
 		assert.True(t, resp.IsError)
 		assert.Contains(t, resp.Content, "required")
 	})
+}
+
+func ambiguousResolveAliasForTest(alias string) (skillspkg.ResolvedSkill, error) {
+	return skillspkg.Lookup([]skillspkg.ResolvedSkill{
+		{
+			Skill: skillspkg.Skill{Name: "deploy", Source: skillspkg.SourcePersonal},
+			Alias: "personal/deploy",
+		},
+		{
+			Skill: skillspkg.Skill{Name: "deploy", Source: skillspkg.SourceWorkspace},
+			Alias: "workspace/deploy",
+		},
+	}, alias)
 }
 
 func TestReadSkillFileTool(t *testing.T) {
@@ -758,6 +791,26 @@ func TestReadSkillFileTool(t *testing.T) {
 		require.NoError(t, err)
 		assert.True(t, resp.IsError)
 		assert.Contains(t, resp.Content, "not supported for personal skills")
+	})
+
+	t.Run("AmbiguousLookupSurfacesAliases", func(t *testing.T) {
+		t.Parallel()
+
+		tool := chattool.ReadSkillFile(chattool.ReadSkillOptions{
+			ResolveAlias: ambiguousResolveAliasForTest,
+		})
+
+		resp, err := tool.Run(context.Background(), fantasy.ToolCall{
+			ID:    "call-1",
+			Name:  "read_skill_file",
+			Input: `{"name":"deploy","path":"helper.md"}`,
+		})
+
+		require.NoError(t, err)
+		assert.True(t, resp.IsError)
+		assert.Contains(t, resp.Content, "skill lookup is ambiguous")
+		assert.Contains(t, resp.Content, "personal/deploy")
+		assert.Contains(t, resp.Content, "workspace/deploy")
 	})
 
 	t.Run("TraversalRejected", func(t *testing.T) {
