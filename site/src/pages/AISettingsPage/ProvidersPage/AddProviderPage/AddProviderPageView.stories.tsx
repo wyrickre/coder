@@ -9,10 +9,10 @@ const meta: Meta<typeof AddProviderPageView> = {
 	decorators: [withToaster],
 	parameters: {
 		reactRouter: reactRouterParameters({
-			location: { path: "/aisettings/add" },
+			location: { path: "/ai/settings/add" },
 			routing: [
-				{ path: "/aisettings", useStoryElement: true },
-				{ path: "/aisettings/add", useStoryElement: true },
+				{ path: "/ai/settings", useStoryElement: true },
+				{ path: "/ai/settings/add", useStoryElement: true },
 			],
 		}),
 	},

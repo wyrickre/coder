@@ -21,7 +21,7 @@ const AddProviderPageView: React.FC = () => {
 	return (
 		<>
 			<div className="pt-4 px-6">
-				<Link to="/aisettings">
+				<Link to="/ai/settings">
 					<Button variant="subtle">
 						<ArrowLeftIcon />
 						<span>Back to providers</span>
@@ -49,7 +49,7 @@ const AddProviderPageView: React.FC = () => {
 								{
 									onSuccess: (res) => {
 										toast.success(`Provider "${res.name}" added.`);
-										void navigate(`/aisettings/${res.name}`);
+										void navigate(`/ai/settings/${res.name}`);
 									},
 									onError: (error) => {
 										const name = values.name.trim();

@@ -13,11 +13,11 @@ const meta: Meta<typeof ProvidersPageView> = {
 	},
 	parameters: {
 		reactRouter: reactRouterParameters({
-			location: { path: "/aisettings" },
+			location: { path: "/ai/settings" },
 			routing: [
-				{ path: "/aisettings", useStoryElement: true },
-				{ path: "/aisettings/add", useStoryElement: true },
-				{ path: "/aisettings/:providerId", useStoryElement: true },
+				{ path: "/ai/settings", useStoryElement: true },
+				{ path: "/ai/settings/add", useStoryElement: true },
+				{ path: "/ai/settings/:providerId", useStoryElement: true },
 			],
 		}),
 	},

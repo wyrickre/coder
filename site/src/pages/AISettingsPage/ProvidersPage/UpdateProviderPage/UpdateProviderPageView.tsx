@@ -51,7 +51,7 @@ const UpdateProviderPageView: React.FC = () => {
 	const provider = providerQuery.data;
 
 	if (!providerId) {
-		return <Navigate to="/aisettings" replace />;
+		return <Navigate to="/ai/settings" replace />;
 	}
 
 	if (providerQuery.isLoading) {
@@ -63,14 +63,14 @@ const UpdateProviderPageView: React.FC = () => {
 			? providerQuery.error.response?.status
 			: undefined;
 		if (status === 404) {
-			return <Navigate to="/aisettings" replace />;
+			return <Navigate to="/ai/settings" replace />;
 		}
 		return (
 			<div className="pt-4 px-6 flex flex-col gap-4">
 				<p className="text-content-secondary">
 					{getErrorMessage(providerQuery.error, "Failed to load provider.")}
 				</p>
-				<Link to="/aisettings">
+				<Link to="/ai/settings">
 					<Button variant="subtle">
 						<ArrowLeftIcon />
 						<span>Back to providers</span>
@@ -81,13 +81,13 @@ const UpdateProviderPageView: React.FC = () => {
 	}
 
 	if (!provider) {
-		return <Navigate to="/aisettings" replace />;
+		return <Navigate to="/ai/settings" replace />;
 	}
 
 	return (
 		<>
 			<div className="pt-4 px-6">
-				<Link to="/aisettings">
+				<Link to="/ai/settings">
 					<Button variant="subtle">
 						<ArrowLeftIcon />
 						<span>Back to providers</span>
@@ -170,7 +170,7 @@ const UpdateProviderPageView: React.FC = () => {
 							onSuccess: () => {
 								toast.success(`Provider "${provider.name}" deleted.`);
 								setDeleteDialogOpen(false);
-								void navigate("/aisettings", { replace: true });
+								void navigate("/ai/settings", { replace: true });
 							},
 							onError: (error) => {
 								toast.error(

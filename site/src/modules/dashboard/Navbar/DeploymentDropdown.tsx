@@ -83,6 +83,11 @@ const DeploymentDropdownContent: FC<DeploymentDropdownProps> = ({
 			<DropdownMenuItem asChild>
 				<Link to="/organizations">Organizations</Link>
 			</DropdownMenuItem>
+			{canViewAISettings && (
+				<DropdownMenuItem asChild>
+					<Link to="/ai/settings">AI</Link>
+				</DropdownMenuItem>
+			)}
 			{canViewAuditLog && (
 				<DropdownMenuItem asChild>
 					<Link to={linkToAuditing}>Audit Logs</Link>
@@ -96,11 +101,6 @@ const DeploymentDropdownContent: FC<DeploymentDropdownProps> = ({
 			{canViewAIBridge && (
 				<DropdownMenuItem asChild>
 					<Link to="/aibridge/sessions">AI Bridge Sessions</Link>
-				</DropdownMenuItem>
-			)}
-			{canViewAISettings && (
-				<DropdownMenuItem asChild>
-					<Link to="/aisettings">AI Settings</Link>
 				</DropdownMenuItem>
 			)}
 			{canViewHealth && (

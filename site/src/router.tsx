@@ -694,7 +694,7 @@ export const router = createBrowserRouter(
 						<Route path=":sessionId" element={<AIBridgeSessionThreadsPage />} />
 					</Route>
 
-					<Route path="/aisettings" element={<AISettingsLayout />}>
+					<Route path="/ai/settings" element={<AISettingsLayout />}>
 						<Route index element={<AISettingsProvidersPage />} />
 						<Route
 							path=":providerId"

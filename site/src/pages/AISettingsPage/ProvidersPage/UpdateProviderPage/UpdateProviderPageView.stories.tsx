@@ -9,10 +9,10 @@ const meta: Meta<typeof UpdateProviderPageView> = {
 	decorators: [withToaster],
 	parameters: {
 		reactRouter: reactRouterParameters({
-			location: { path: "/aisettings/openai" },
+			location: { path: "/ai/settings/openai" },
 			routing: [
-				{ path: "/aisettings", useStoryElement: true },
-				{ path: "/aisettings/:providerId", useStoryElement: true },
+				{ path: "/ai/settings", useStoryElement: true },
+				{ path: "/ai/settings/:providerId", useStoryElement: true },
 			],
 		}),
 	},

@@ -20,9 +20,7 @@ const AISettingsLayout = () => {
 					</BreadcrumbItem>
 					<BreadcrumbSeparator />
 					<BreadcrumbItem>
-						<BreadcrumbPage className="text-content-primary">
-							AI Settings
-						</BreadcrumbPage>
+						<BreadcrumbPage className="text-content-primary">AI</BreadcrumbPage>
 					</BreadcrumbItem>
 				</BreadcrumbList>
 			</Breadcrumb>

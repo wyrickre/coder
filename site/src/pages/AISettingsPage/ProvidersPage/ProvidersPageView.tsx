@@ -36,7 +36,7 @@ const ProvidersPageView: React.FC<ProvidersPageViewProps> = ({
 			<PageHeader
 				className="pt-4 pb-8"
 				actions={
-					<Link to="/aisettings/add">
+					<Link to="/ai/settings/add">
 						<Button>
 							<PlusIcon />
 							<span>Add provider</span>
@@ -68,7 +68,7 @@ const ProvidersPageView: React.FC<ProvidersPageViewProps> = ({
 							<ProviderRow
 								key={provider.name}
 								provider={provider}
-								onClick={() => navigate(`/aisettings/${provider.name}`)}
+								onClick={() => navigate(`/ai/settings/${provider.name}`)}
 							/>
 						))
 					)}
