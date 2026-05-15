@@ -59,7 +59,7 @@ const defaultInitialValues: ProviderFormValues = {
 	accessKey: "",
 	accessKeySecret: "",
 	apiKey: "",
-	enabled: false,
+	enabled: true,
 };
 
 const makeOpenAiAnthropicSchema = (editing: boolean) =>
