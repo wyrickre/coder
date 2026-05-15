@@ -586,37 +586,22 @@ export const ProviderForm: FC<ProviderFormProps> = ({
 							className="w-full"
 							placeholder={baseUrlPlaceholder(form.values.type)}
 						/>
-						<FormField
-							required
-							field={{
-								...getFieldHelpers("model"),
-								helperText: (
-									<>
-										Example:{" "}
-										<code>anthropic.claude-3-5-sonnet-20241022-v2:0</code>
-									</>
-								),
-							}}
-							label="Model"
-							description="The primary Bedrock model ID to use for chat/completions."
-							className="w-full"
-							placeholder="anthropic.claude-3-5-sonnet-20241022-v2:0"
-						/>
-						<FormField
-							required
-							field={{
-								...getFieldHelpers("smallFastModel"),
-								helperText: (
-									<>
-										Example: <code>anthropic.claude-3-haiku-20240307-v1:0</code>
-									</>
-								),
-							}}
-							label="Small fast model"
-							description="A lower-cost, lower-latency model used for lightweight requests such as summaries, titles, routing, or quick responses."
-							className="w-full"
-							placeholder="anthropic.claude-3-haiku-20240307-v1:0"
-						/>
+						<div className="grid grid-cols-2 items-start gap-4">
+							<FormField
+								required
+								field={getFieldHelpers("model")}
+								label="Model"
+								className="w-full"
+								placeholder="anthropic.claude-3-5-sonnet-20241022-v2:0"
+							/>
+							<FormField
+								required
+								field={getFieldHelpers("smallFastModel")}
+								label="Small fast model"
+								className="w-full"
+								placeholder="anthropic.claude-3-haiku-20240307-v1:0"
+							/>
+						</div>
 						<div className="grid grid-cols-[auto_1fr_auto] items-start gap-4">
 							<CredentialField
 								required
