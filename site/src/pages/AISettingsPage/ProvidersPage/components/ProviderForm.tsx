@@ -291,10 +291,10 @@ const CredentialField: FC<CredentialFieldProps> = ({
 	return (
 		<div className="flex flex-col gap-2">
 			{labelNode}
-			{descriptionNode}
 			<div className="flex items-start gap-2">
 				<div className="flex min-w-0 flex-1 flex-col gap-2">
 					{inputNode}
+					{descriptionNode}
 					{helperNode}
 				</div>
 				{trashNode}
