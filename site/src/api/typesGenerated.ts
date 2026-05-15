@@ -298,12 +298,12 @@ export interface AIConfig {
 	readonly chat?: ChatConfig;
 }
 
-// From codersdk/aiproviders.go
+// From codersdk/aibridgeproviders.go
 /**
- * AIProvider represents an AI provider configuration row as returned
- * by the API. API keys are stored in a separate ai_provider_keys
- * table and managed via the keys sub-endpoints; secret fields on
- * Settings are never included in responses.
+ * AIProvider represents an AI Bridge provider configuration row as
+ * returned by the API. API keys are stored in a separate
+ * ai_provider_keys table and managed via the keys sub-endpoints;
+ * secret fields on Settings are never included in responses.
  */
 export interface AIProvider {
 	readonly id: string;
@@ -317,7 +317,7 @@ export interface AIProvider {
 	readonly updated_at: string;
 }
 
-// From codersdk/aiproviders_bedrock.go
+// From codersdk/aibridgeproviders.go
 /**
  * AIProviderBedrockSettings configures providers that authenticate
  * against AWS Bedrock. AccessKey and AccessKeySecret are write-only:
@@ -351,7 +351,7 @@ export interface AIProviderBedrockSettings {
 	readonly access_key_secret?: string;
 }
 
-// From codersdk/aiproviders_bedrock.go
+// From codersdk/aibridgeproviders.go
 /**
  * AIProviderBedrockSettingsVersion is the current schema version of
  * AIProviderBedrockSettings.
@@ -387,11 +387,11 @@ export interface AIProviderConfig {
 	readonly bedrock_small_fast_model?: string;
 }
 
-// From codersdk/aiproviders.go
+// From codersdk/aibridgeproviders.go
 /**
  * AIProviderKey represents a single API key registered against an
- * AI provider, as returned by the API. The plaintext APIKey is
- * write-only and never included in responses.
+ * AI Bridge provider, as returned by the API. The plaintext APIKey
+ * is write-only and never included in responses.
  */
 export interface AIProviderKey {
 	readonly id: string;
@@ -400,7 +400,7 @@ export interface AIProviderKey {
 	readonly updated_at: string;
 }
 
-// From codersdk/aiproviders.go
+// From codersdk/aibridgeproviders.go
 /**
  * AIProviderSettings is the discriminated container for type-specific
  * provider settings stored in ai_providers.settings. Providers that
@@ -416,17 +416,32 @@ export interface AIProviderKey {
  */
 export interface AIProviderSettings {}
 
-// From codersdk/aiproviders_bedrock.go
+// From codersdk/aibridgeproviders.go
 /**
  * AIProviderSettingsTypeBedrock is the _type discriminator value for
  * AIProviderBedrockSettings.
  */
 export const AIProviderSettingsTypeBedrock = "bedrock";
 
-// From codersdk/aiproviders.go
-export type AIProviderType = "anthropic" | "openai";
+// From codersdk/aibridgeproviders.go
+export type AIProviderType =
+	| "anthropic"
+	| "azure"
+	| "bedrock"
+	| "google"
+	| "openai"
+	| "openrouter"
+	| "vercel";
 
-export const AIProviderTypes: AIProviderType[] = ["anthropic", "openai"];
+export const AIProviderTypes: AIProviderType[] = [
+	"anthropic",
+	"azure",
+	"bedrock",
+	"google",
+	"openai",
+	"openrouter",
+	"vercel",
+];
 
 // From codersdk/allowlist.go
 /**
@@ -3079,20 +3094,20 @@ export interface ConvertLoginRequest {
 	readonly password: string;
 }
 
-// From codersdk/aiproviders.go
+// From codersdk/aibridgeproviders.go
 /**
  * CreateAIProviderKeyRequest is the payload for adding an API key to
- * an AI provider. Only meaningful for openai and anthropic providers;
- * Bedrock providers reject this call because they use the access
- * credentials stored in Settings.
+ * an AI Bridge provider. Only meaningful for openai and anthropic
+ * providers; Bedrock providers reject this call because they use the
+ * access credentials stored in Settings.
  */
 export interface CreateAIProviderKeyRequest {
 	readonly api_key: string;
 }
 
-// From codersdk/aiproviders.go
+// From codersdk/aibridgeproviders.go
 /**
- * CreateAIProviderRequest is the payload for creating a new AI
+ * CreateAIProviderRequest is the payload for creating a new AI Bridge
  * provider. Name, Type, and BaseURL are required. API keys for
  * OpenAI/Anthropic providers are added via the keys sub-endpoint
  * after the provider is created; Bedrock providers carry their
@@ -4496,14 +4511,6 @@ export interface Group {
 	readonly source: GroupSource;
 	readonly organization_name: string;
 	readonly organization_display_name: string;
-}
-
-// From codersdk/aibridge.go
-export interface GroupAIBudget {
-	readonly group_id: string;
-	readonly spend_limit_micros: number;
-	readonly created_at: string;
-	readonly updated_at: string;
 }
 
 // From codersdk/groups.go
@@ -8173,12 +8180,12 @@ export interface TransitionStats {
 	readonly P95: number | null;
 }
 
-// From codersdk/aiproviders.go
+// From codersdk/aibridgeproviders.go
 /**
  * UpdateAIProviderRequest is the payload for partially updating an
- * AI provider. At least one field must be non-nil. Pointer fields
- * distinguish "not sent" (nil) from "set to empty/zero" (a pointer
- * to the zero value).
+ * AI Bridge provider. At least one field must be non-nil. Pointer
+ * fields distinguish "not sent" (nil) from "set to empty/zero" (a
+ * pointer to the zero value).
  */
 export interface UpdateAIProviderRequest {
 	readonly display_name?: string;
@@ -8842,11 +8849,6 @@ export interface UpsertChatUsageLimitGroupOverrideRequest {
  */
 export interface UpsertChatUsageLimitOverrideRequest {
 	readonly spend_limit_micros: number; // Must be greater than 0.
-}
-
-// From codersdk/aibridge.go
-export interface UpsertGroupAIBudgetRequest {
-	readonly spend_limit_micros: number;
 }
 
 // From codersdk/workspaceagentportshare.go

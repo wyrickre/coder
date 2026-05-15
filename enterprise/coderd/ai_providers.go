@@ -583,13 +583,22 @@ func isBedrockProvider(row database.AIProvider) bool {
 func validateCreateAIProviderRequest(req codersdk.CreateAIProviderRequest) []codersdk.ValidationError {
 	var validations []codersdk.ValidationError
 	switch req.Type {
-	case codersdk.AIProviderTypeOpenAI, codersdk.AIProviderTypeAnthropic:
+	case codersdk.AIProviderTypeOpenAI,
+		codersdk.AIProviderTypeAnthropic,
+		codersdk.AIProviderTypeAzure,
+		codersdk.AIProviderTypeBedrock,
+		codersdk.AIProviderTypeGoogle,
+		codersdk.AIProviderTypeOpenrouter,
+		codersdk.AIProviderTypeVercel:
 	case "":
 		validations = append(validations, codersdk.ValidationError{Field: "type", Detail: "type is required"})
 	default:
 		validations = append(validations, codersdk.ValidationError{
-			Field:  "type",
-			Detail: fmt.Sprintf("unsupported provider type %q; expected one of: openai, anthropic", req.Type),
+			Field: "type",
+			Detail: fmt.Sprintf(
+				"unsupported provider type %q; expected one of: openai, anthropic, azure, bedrock, google, openrouter, vercel",
+				req.Type,
+			),
 		})
 	}
 	if errs := validateAIProviderName(req.Name); len(errs) > 0 {

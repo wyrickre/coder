@@ -61,13 +61,25 @@ func buildProvidersFromDB(
 			firstKey = keys[0].APIKey
 		}
 
+		// aibridge currently has native support for OpenAI and
+		// Anthropic only. The other ai_provider_type values
+		// (azure, google, openrouter, vercel) are routed through
+		// the OpenAI fantasy client because chatd configures these
+		// providers against their OpenAI-compatible endpoints.
+		// Bedrock providers route through the Anthropic fantasy
+		// client with a Bedrock discriminator in Settings; native
+		// gateway-side support for any of these arrives later.
 		switch row.Type {
-		case database.AiProviderTypeOpenai:
+		case database.AiProviderTypeOpenai,
+			database.AiProviderTypeAzure,
+			database.AiProviderTypeGoogle,
+			database.AiProviderTypeOpenrouter,
+			database.AiProviderTypeVercel:
 			if firstKey == "" {
 				logger.Warn(context.Background(),
 					"skipping enabled AI Bridge provider with no API keys; add one via /api/v2/aibridge/providers/{name}/keys",
 					slog.F("name", row.Name),
-					slog.F("type", "openai"),
+					slog.F("type", string(row.Type)),
 				)
 				continue
 			}
@@ -78,7 +90,7 @@ func buildProvidersFromDB(
 				CircuitBreaker:   cbConfig,
 				SendActorHeaders: cfg.SendActorHeaders.Value(),
 			}))
-		case database.AiProviderTypeAnthropic:
+		case database.AiProviderTypeAnthropic, database.AiProviderTypeBedrock:
 			var bedrock *aibridge.AWSBedrockConfig
 			if settings.Bedrock != nil {
 				bedrock = &aibridge.AWSBedrockConfig{
@@ -89,6 +101,18 @@ func buildProvidersFromDB(
 					SmallFastModel:  settings.Bedrock.SmallFastModel,
 				}
 			}
+			// A row typed 'bedrock' authenticates exclusively via
+			// settings; if those have not been populated yet (e.g.
+			// the row was just migrated and the operator has not
+			// entered Bedrock credentials), skip it rather than
+			// silently fall back to an unsigned Anthropic client.
+			if row.Type == database.AiProviderTypeBedrock && bedrock == nil {
+				logger.Warn(context.Background(),
+					"skipping enabled bedrock AI Bridge provider with no Bedrock settings; configure access credentials via the provider settings",
+					slog.F("name", row.Name),
+				)
+				continue
+			}
 			// Bedrock providers authenticate via settings and may
 			// have zero ai_provider_keys; that is the expected
 			// configuration. Non-Bedrock Anthropic providers must
@@ -97,7 +121,7 @@ func buildProvidersFromDB(
 				logger.Warn(context.Background(),
 					"skipping enabled AI Bridge provider with no API keys; add one via /api/v2/aibridge/providers/{name}/keys",
 					slog.F("name", row.Name),
-					slog.F("type", "anthropic"),
+					slog.F("type", string(row.Type)),
 				)
 				continue
 			}

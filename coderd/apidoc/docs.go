@@ -14842,11 +14842,21 @@ const docTemplate = `{
             "type": "string",
             "enum": [
                 "openai",
-                "anthropic"
+                "anthropic",
+                "azure",
+                "google",
+                "openrouter",
+                "vercel",
+                "bedrock"
             ],
             "x-enum-varnames": [
                 "AIProviderTypeOpenAI",
-                "AIProviderTypeAnthropic"
+                "AIProviderTypeAnthropic",
+                "AIProviderTypeAzure",
+                "AIProviderTypeGoogle",
+                "AIProviderTypeOpenrouter",
+                "AIProviderTypeVercel",
+                "AIProviderTypeBedrock"
             ]
         },
         "codersdk.APIAllowListTarget": {

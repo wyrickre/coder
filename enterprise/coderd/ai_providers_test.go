@@ -226,8 +226,8 @@ func TestAIProvidersCRUD(t *testing.T) {
 
 		//nolint:gocritic // Owner role is the audience for this endpoint.
 		_, err := client.CreateAIProvider(ctx, codersdk.CreateAIProviderRequest{
-			Type:    "google",
-			Name:    "google",
+			Type:    "gemini",
+			Name:    "gemini",
 			Enabled: true,
 			BaseURL: "https://api.example.com",
 		})

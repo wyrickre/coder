@@ -1394,9 +1394,9 @@ None
 
 #### Enumerated Values
 
-| Value(s)              |
-|-----------------------|
-| `anthropic`, `openai` |
+| Value(s)                                                                    |
+|-----------------------------------------------------------------------------|
+| `anthropic`, `azure`, `bedrock`, `google`, `openai`, `openrouter`, `vercel` |
 
 ## codersdk.APIAllowListTarget
 
