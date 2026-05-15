@@ -3,6 +3,7 @@ import { TrashIcon } from "lucide-react";
 import { type FC, useEffect, useId, useState } from "react";
 import { Link } from "react-router";
 import * as Yup from "yup";
+import type { AIProvider } from "#/api/typesGenerated";
 import { ErrorAlert } from "#/components/Alert/ErrorAlert";
 import { Button } from "#/components/Button/Button";
 import { Form, FormFields } from "#/components/Form/Form";
@@ -159,6 +160,35 @@ type ProviderFormProps = {
 	submitError?: unknown;
 };
 
+const namePlaceholder = (provider: string) => {
+	switch (provider) {
+		case "openai":
+			return "openai";
+		case "anthropic":
+			return "anthropic";
+	}
+};
+
+const apiKeyPlaceholder = (provider: string) => {
+	switch (provider) {
+		case "openai":
+			return "sk-proj-...";
+		case "anthropic":
+			return "sk-ant-...";
+	}
+};
+
+const baseUrlPlaceholder = (provider: string) => {
+	switch (provider) {
+		case "openai":
+			return "https://api.openai.com";
+		case "anthropic":
+			return "https://api.anthropic.com";
+		default:
+			return;
+	}
+};
+
 export const ProviderForm: FC<ProviderFormProps> = ({
 	editing = false,
 	bedrockSavedAccessCredentials = false,
@@ -293,6 +323,7 @@ export const ProviderForm: FC<ProviderFormProps> = ({
 							label="Name"
 							description="The name of the provider. This is used to identify the provider in the UI."
 							className="w-full"
+							placeholder={namePlaceholder(form.values.type)}
 						/>
 						{/* API keys live on a sub-resource server-side; the parent
 						    page chains POST /keys (and revokes the previous key when
@@ -315,6 +346,7 @@ export const ProviderForm: FC<ProviderFormProps> = ({
 										? clearOpenAiAnthropicApiKey
 										: undefined
 								}
+								placeholder={apiKeyPlaceholder(form.values.type)}
 							/>
 							{openAiAnthropicApiKeyMasked && (
 								<Button
@@ -333,6 +365,7 @@ export const ProviderForm: FC<ProviderFormProps> = ({
 							label="Custom endpoint"
 							description="Custom endpoint for this provider. Leave empty to use the default."
 							className="w-full"
+							placeholder={baseUrlPlaceholder(form.values.type)}
 						/>
 					</>
 				)}
