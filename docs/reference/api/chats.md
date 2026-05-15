@@ -17,10 +17,10 @@ Experimental: this endpoint is subject to change.
 
 ### Parameters
 
-| Name    | In    | Type   | Required | Description                                                                 |
-|---------|-------|--------|----------|-----------------------------------------------------------------------------|
-| `q`     | query | string | false    | Search query. Supports archived:bool and diff_url:<url> terms (quote URLs). |
-| `label` | query | string | false    | Filter by label as key:value. Repeat for multiple (AND logic).              |
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|`q`|query|string|false|Search query. Supports archived:bool, chat_status:unread, pr_status:<draft|open|merged|closed> as repeated or comma-separated values, and diff_url:<url> terms (quote URLs).|
+|`label`|query|string|false|Filter by label as key:value. Repeat for multiple (AND logic).|
 
 ### Example responses
 
