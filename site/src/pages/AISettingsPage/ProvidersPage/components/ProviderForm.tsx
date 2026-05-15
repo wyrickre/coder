@@ -1,12 +1,13 @@
 import { useFormik } from "formik";
 import { TrashIcon } from "lucide-react";
-import { type FC, useEffect, useId, useState } from "react";
+import { type FC, type ReactNode, useEffect, useId, useState } from "react";
 import { Link } from "react-router";
 import * as Yup from "yup";
 import { ErrorAlert } from "#/components/Alert/ErrorAlert";
 import { Button } from "#/components/Button/Button";
 import { Form, FormFields } from "#/components/Form/Form";
 import { FormField } from "#/components/FormField/FormField";
+import { Input } from "#/components/Input/Input";
 import { Label } from "#/components/Label/Label";
 import {
 	Select,
@@ -19,7 +20,7 @@ import { Spinner } from "#/components/Spinner/Spinner";
 import { Switch } from "#/components/Switch/Switch";
 import { ProviderIcon } from "#/pages/AISettingsPage/ProvidersPage/components/ProviderIcon";
 import { cn } from "#/utils/cn";
-import { getFormHelpers } from "#/utils/formUtils";
+import { type FormHelpers, getFormHelpers } from "#/utils/formUtils";
 
 export type ProviderFormValues = {
 	type: "" | "openai" | "anthropic" | "bedrock";
@@ -45,8 +46,9 @@ const providerNameErrorMessage =
 
 /**
  * Stable mask shown in credential inputs when a value already exists on the
- * server. Focusing the input clears it, so we never have to round-trip the
- * mask to the API.
+ * server. The companion trash button next to each input clears the field so
+ * the user can type a replacement; an untouched mask sanitizes to empty on
+ * the wire, which the API mapping treats as "keep the existing value".
  */
 export const SAVED_CREDENTIAL_MASK = "********";
 
@@ -147,6 +149,146 @@ const getProviderFormSchema = (editing: boolean) =>
 		}
 	});
 
+type CredentialFieldProps = {
+	label: string;
+	helpers: FormHelpers;
+	onClear: () => void;
+	inputType?: "text" | "password";
+	autoComplete?: string;
+	placeholder?: string;
+	description?: ReactNode;
+	required?: boolean;
+	trashLabel: string;
+	/**
+	 * - `"flex"` (default) renders the field as a self-contained stack: label
+	 *   and description above an input + trash button on a single flex row.
+	 *   Use for single-field credentials.
+	 * - `"grid-row"` renders the field as three sibling grid items (label,
+	 *   input cell, trash button) so it slots into a parent grid using
+	 *   `grid-cols-[auto_1fr_auto]`. Stack multiple `grid-row` credentials
+	 *   inside the same parent grid to keep their labels, inputs, and trash
+	 *   buttons aligned across rows. Descriptions and helperText are placed
+	 *   under the input within the middle cell.
+	 */
+	layout?: "flex" | "grid-row";
+};
+
+/**
+ * Single credential input + per-field destructive trash button. The trash
+ * button stays visible at all times so the user can clear whatever they just
+ * typed (or the seeded `SAVED_CREDENTIAL_MASK` when a credential is already
+ * on file). Pass `inputType="password"` to render the value as dots.
+ *
+ * `CredentialField` is a lightweight rebuild of `FormField` that lets the
+ * label, input, and trash button live as siblings so they can participate in
+ * the parent's grid layout for paired credentials.
+ */
+const CredentialField: FC<CredentialFieldProps> = ({
+	label,
+	helpers,
+	onClear,
+	inputType,
+	autoComplete,
+	placeholder,
+	description,
+	required = false,
+	trashLabel,
+	layout = "flex",
+}) => {
+	const inputId = useId();
+	const errorId = `${inputId}-error`;
+	const helperId = `${inputId}-helper`;
+	const descriptionId = `${inputId}-description`;
+	const describedBy = [
+		description ? descriptionId : null,
+		helpers.error ? errorId : helpers.helperText ? helperId : null,
+	]
+		.filter(Boolean)
+		.join(" ");
+
+	const labelNode = (
+		<Label htmlFor={inputId}>
+			{label}{" "}
+			{required && (
+				<span className="text-xs font-bold text-content-destructive">*</span>
+			)}
+		</Label>
+	);
+
+	const descriptionNode = description && (
+		<div id={descriptionId} className="text-xs text-content-secondary">
+			{description}
+		</div>
+	);
+
+	const helperNode = helpers.error ? (
+		<span id={errorId} className="text-xs text-content-destructive">
+			{helpers.helperText}
+		</span>
+	) : helpers.helperText ? (
+		<span id={helperId} className="text-xs text-content-secondary">
+			{helpers.helperText}
+		</span>
+	) : null;
+
+	const inputNode = (
+		<Input
+			id={inputId}
+			name={helpers.name}
+			value={helpers.value}
+			onChange={helpers.onChange}
+			onBlur={helpers.onBlur}
+			type={inputType}
+			autoComplete={autoComplete}
+			placeholder={placeholder}
+			aria-invalid={helpers.error}
+			aria-describedby={describedBy || undefined}
+			className={cn("w-full", helpers.error && "border-border-destructive")}
+		/>
+	);
+
+	const trashNode = (
+		<Button
+			type="button"
+			variant="destructive"
+			size="icon"
+			onClick={onClear}
+			aria-label={trashLabel}
+		>
+			<TrashIcon aria-hidden="true" />
+			<span className="sr-only">{trashLabel}</span>
+		</Button>
+	);
+
+	if (layout === "grid-row") {
+		return (
+			<>
+				<div className="pt-2.5">{labelNode}</div>
+				<div className="flex flex-col gap-2">
+					{descriptionNode}
+					{inputNode}
+					{helperNode}
+				</div>
+				{trashNode}
+			</>
+		);
+	}
+
+	return (
+		<div className="flex flex-col gap-2">
+			{labelNode}
+			{descriptionNode}
+			<div className="flex items-start gap-2">
+				<div className="flex min-w-0 flex-1 flex-col gap-2">
+					{inputNode}
+					{helperNode}
+				</div>
+				{trashNode}
+			</div>
+		</div>
+	);
+};
+
 type ProviderFormProps = {
 	editing?: boolean;
 	/** When editing Bedrock and the API already has keys, show masked placeholders until cleared. */
@@ -204,23 +346,21 @@ export const ProviderForm: FC<ProviderFormProps> = ({
 	const typeSelectId = useId();
 	const enabledSwitchId = useId();
 
-	// "Masked" means we're showing SAVED_CREDENTIAL_MASK in the inputs. The
-	// first focus on a masked field clears it and flips the mask off so the
-	// user can type a replacement; the explicit "Clear keys" button does the
-	// same thing.
-	const [bedrockKeysMasked, setBedrockKeysMasked] = useState(
+	// While editing Bedrock, the access key (not secret) input swaps between
+	// password dots (when a credential is already on file and the user hasn't
+	// cleared it) and plain text (so the user can see what they're typing).
+	// Both Bedrock fields and the openai/anthropic API key field always render
+	// as password dots regardless, so they don't need their own mask state.
+	// Clearing any of them via the trash button just empties the form value;
+	// the mask boolean below tracks whether to keep treating the access key
+	// value as opaque.
+	const [bedrockAccessKeyMasked, setBedrockAccessKeyMasked] = useState(
 		() => bedrockSavedAccessCredentials,
 	);
-	const [openAiAnthropicApiKeyMasked, setOpenAiAnthropicApiKeyMasked] =
-		useState(() => openAiAnthropicSavedApiKey);
 
 	useEffect(() => {
-		setBedrockKeysMasked(bedrockSavedAccessCredentials);
+		setBedrockAccessKeyMasked(bedrockSavedAccessCredentials);
 	}, [bedrockSavedAccessCredentials]);
-
-	useEffect(() => {
-		setOpenAiAnthropicApiKeyMasked(openAiAnthropicSavedApiKey);
-	}, [openAiAnthropicSavedApiKey]);
 
 	const form = useFormik<ProviderFormValues>({
 		initialValues: {
@@ -247,15 +387,17 @@ export const ProviderForm: FC<ProviderFormProps> = ({
 
 	const typeSelectValue = form.values.type;
 
-	const clearBedrockKeys = () => {
+	const clearBedrockAccessKey = () => {
 		void form.setFieldValue("accessKey", "");
+		setBedrockAccessKeyMasked(false);
+	};
+
+	const clearBedrockAccessKeySecret = () => {
 		void form.setFieldValue("accessKeySecret", "");
-		setBedrockKeysMasked(false);
 	};
 
 	const clearOpenAiAnthropicApiKey = () => {
 		void form.setFieldValue("apiKey", "");
-		setOpenAiAnthropicApiKeyMasked(false);
 	};
 
 	return (
@@ -333,38 +475,17 @@ export const ProviderForm: FC<ProviderFormProps> = ({
 						    page chains POST /keys (and revokes the previous key when
 						    rotating) after the provider PATCH succeeds. We treat an
 						    untouched mask as "keep the existing key". */}
-						<div className="flex flex-col gap-4">
-							<FormField
-								required
-								field={getFieldHelpers("apiKey")}
-								label="API key"
-								type="password"
-								description={
-									editing && !openAiAnthropicApiKeyMasked
-										? "Secret key used to authenticate requests to this provider, submitting replaces the existing key."
-										: "Secret key used to authenticate requests to this provider."
-								}
-								className="w-full"
-								autoComplete="new-password"
-								onFocus={
-									openAiAnthropicApiKeyMasked
-										? clearOpenAiAnthropicApiKey
-										: undefined
-								}
-								placeholder={apiKeyPlaceholder(form.values.type)}
-							/>
-							{openAiAnthropicApiKeyMasked && (
-								<Button
-									type="button"
-									variant="outline"
-									className="self-start"
-									onClick={clearOpenAiAnthropicApiKey}
-								>
-									<TrashIcon />
-									<span>Clear key</span>
-								</Button>
-							)}
-						</div>
+						<CredentialField
+							required
+							label="API key"
+							helpers={getFieldHelpers("apiKey")}
+							onClear={clearOpenAiAnthropicApiKey}
+							inputType="password"
+							autoComplete="new-password"
+							description="Secret key used to authenticate requests to this provider."
+							placeholder={apiKeyPlaceholder(form.values.type)}
+							trashLabel="Remove saved API key"
+						/>
 						<FormField
 							field={getFieldHelpers("baseUrl")}
 							label="Custom endpoint"
@@ -432,40 +553,31 @@ export const ProviderForm: FC<ProviderFormProps> = ({
 							className="w-full"
 							placeholder="anthropic.claude-3-haiku-20240307-v1:0"
 						/>
-						<div className="flex flex-col gap-4">
-							<FormField
+						<div className="grid grid-cols-[auto_1fr_auto] items-start gap-4">
+							<CredentialField
 								required
-								field={getFieldHelpers("accessKey")}
 								label="Access key"
-								description={
-									editing && !bedrockKeysMasked
-										? "Your AWS Access Key ID used to authenticate requests to Bedrock, enter a new access key and secret together."
-										: "Your AWS Access Key ID used to authenticate requests to Bedrock."
-								}
-								className="w-full"
-								onFocus={bedrockKeysMasked ? clearBedrockKeys : undefined}
+								helpers={getFieldHelpers("accessKey")}
+								onClear={clearBedrockAccessKey}
+								// Hide the access key value when masked so it renders
+								// uniformly with the secret; revert to plain text once
+								// cleared so the typed key is visible.
+								inputType={bedrockAccessKeyMasked ? "password" : "text"}
+								description="Your AWS Access Key ID used to authenticate requests to Bedrock."
+								trashLabel="Remove saved access key"
+								layout="grid-row"
 							/>
-							<FormField
+							<CredentialField
 								required
-								field={getFieldHelpers("accessKeySecret")}
 								label="Access key secret"
-								description="Your AWS Secret Access Key associated with the access key ID. Stored securely and used for request signing."
-								type="password"
-								className="w-full"
+								helpers={getFieldHelpers("accessKeySecret")}
+								onClear={clearBedrockAccessKeySecret}
+								inputType="password"
 								autoComplete="new-password"
-								onFocus={bedrockKeysMasked ? clearBedrockKeys : undefined}
+								description="Your AWS Secret Access Key associated with the access key ID. Stored securely and used for request signing."
+								trashLabel="Remove saved access key secret"
+								layout="grid-row"
 							/>
-							{bedrockKeysMasked && (
-								<Button
-									type="button"
-									variant="outline"
-									className="self-start"
-									onClick={clearBedrockKeys}
-								>
-									<TrashIcon />
-									<span>Clear keys</span>
-								</Button>
-							)}
 						</div>
 					</>
 				)}
