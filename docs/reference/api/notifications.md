@@ -42,7 +42,8 @@ curl -X POST http://coder-server:8080/api/v2/notifications/custom \
   "validations": [
     {
       "detail": "string",
-      "field": "string"
+      "field": "string",
+      "kind": "missing_secret_env"
     }
   ]
 }
@@ -281,7 +282,8 @@ curl -X PUT http://coder-server:8080/api/v2/notifications/inbox/{id}/read-status
   "validations": [
     {
       "detail": "string",
-      "field": "string"
+      "field": "string",
+      "kind": "missing_secret_env"
     }
   ]
 }

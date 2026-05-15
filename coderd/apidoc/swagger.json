@@ -22171,8 +22171,24 @@
 				},
 				"field": {
 					"type": "string"
+				},
+				"kind": {
+					"description": "Kind optionally categorizes the validation error. It exists so a\nresponse that mixes entries from different sources (for example,\nparameter validations and missing coder_secret requirements) can\nbe routed by consumers without inspecting Field or Detail. When\nevery entry in a Validations slice comes from the same source,\ncallers leave Kind unset and consumers apply default rendering.\nSee the ValidationErrorKind constants for known values.",
+					"allOf": [
+						{
+							"$ref": "#/definitions/codersdk.ValidationErrorKind"
+						}
+					]
 				}
 			}
+		},
+		"codersdk.ValidationErrorKind": {
+			"type": "string",
+			"enum": ["missing_secret_env", "missing_secret_file"],
+			"x-enum-varnames": [
+				"ValidationErrorKindMissingSecretEnv",
+				"ValidationErrorKindMissingSecretFile"
+			]
 		},
 		"codersdk.ValidationMonotonicOrder": {
 			"type": "string",

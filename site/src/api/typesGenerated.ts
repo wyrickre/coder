@@ -8914,7 +8914,25 @@ export interface ValidateUserPasswordResponse {
 export interface ValidationError {
 	readonly field: string;
 	readonly detail: string;
+	/**
+	 * Kind optionally categorizes the validation error. It exists so a
+	 * response that mixes entries from different sources (for example,
+	 * parameter validations and missing coder_secret requirements) can
+	 * be routed by consumers without inspecting Field or Detail. When
+	 * every entry in a Validations slice comes from the same source,
+	 * callers leave Kind unset and consumers apply default rendering.
+	 * See the ValidationErrorKind constants for known values.
+	 */
+	readonly kind?: ValidationErrorKind;
 }
+
+// From codersdk/client.go
+export type ValidationErrorKind = "missing_secret_env" | "missing_secret_file";
+
+export const ValidationErrorKinds: ValidationErrorKind[] = [
+	"missing_secret_env",
+	"missing_secret_file",
+];
 
 // From codersdk/templateversions.go
 export type ValidationMonotonicOrder = "decreasing" | "increasing";

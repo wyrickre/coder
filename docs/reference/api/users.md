@@ -214,7 +214,8 @@ curl -X GET http://coder-server:8080/api/v2/users/first \
   "validations": [
     {
       "detail": "string",
-      "field": "string"
+      "field": "string",
+      "kind": "missing_secret_env"
     }
   ]
 }
@@ -316,7 +317,8 @@ curl -X POST http://coder-server:8080/api/v2/users/logout \
   "validations": [
     {
       "detail": "string",
-      "field": "string"
+      "field": "string",
+      "kind": "missing_secret_env"
     }
   ]
 }

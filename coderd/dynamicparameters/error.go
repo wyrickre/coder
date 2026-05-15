@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/hcl/v2"
 
 	"github.com/coder/coder/v2/codersdk"
+	previewtypes "github.com/coder/preview/types"
 )
 
 func parameterValidationError(diags hcl.Diagnostics) *DiagnosticError {
@@ -40,8 +41,10 @@ type DiagnosticError struct {
 	// Diagnostics are top level diagnostics that will be returned as "Detail" in the response.
 	Diagnostics hcl.Diagnostics
 	// KeyedDiagnostics translate to Validation errors in the response. A key could
-	// be a parameter name, or a tag name. This allows diagnostics to be more closely
-	// associated with a specific index/parameter/tag.
+	// be a parameter name, a tag name, or the env / file name of a missing
+	// coder_secret requirement. The diagnostic's Extra carries a
+	// previewtypes.DiagnosticExtra whose Code is propagated to the
+	// resulting ValidationError.Kind when known.
 	KeyedDiagnostics map[string]hcl.Diagnostics
 }
 
@@ -89,7 +92,7 @@ func (e *DiagnosticError) Response() (int, codersdk.Response) {
 		Validations: nil,
 	}
 
-	// Sort the parameter names so that the order is consistent.
+	// Sort the keyed diagnostic names so that the order is consistent.
 	sortedNames := make([]string, 0, len(e.KeyedDiagnostics))
 	for name := range e.KeyedDiagnostics {
 		sortedNames = append(sortedNames, name)
@@ -101,6 +104,7 @@ func (e *DiagnosticError) Response() (int, codersdk.Response) {
 		resp.Validations = append(resp.Validations, codersdk.ValidationError{
 			Field:  name,
 			Detail: DiagnosticsErrorString(diag),
+			Kind:   keyedDiagnosticsKind(diag),
 		})
 	}
 
@@ -109,6 +113,27 @@ func (e *DiagnosticError) Response() (int, codersdk.Response) {
 	}
 
 	return http.StatusBadRequest, resp
+}
+
+// keyedDiagnosticsKind inspects the first error-severity diagnostic in
+// the given group for a known previewtypes.DiagnosticExtra code, and
+// translates it to a codersdk.ValidationErrorKind. Returns the empty
+// kind when no diagnostic carries a known code, which is the default
+// for parameter validation entries.
+func keyedDiagnosticsKind(diags hcl.Diagnostics) codersdk.ValidationErrorKind {
+	for _, d := range diags {
+		if d.Severity != hcl.DiagError {
+			continue
+		}
+		extra := previewtypes.ExtractDiagnosticExtra(d)
+		switch extra.Code {
+		case DiagCodeMissingSecretEnv:
+			return codersdk.ValidationErrorKindMissingSecretEnv
+		case DiagCodeMissingSecretFile:
+			return codersdk.ValidationErrorKindMissingSecretFile
+		}
+	}
+	return ""
 }
 
 func DiagnosticErrorString(d *hcl.Diagnostic) string {

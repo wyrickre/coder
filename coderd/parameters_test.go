@@ -405,7 +405,8 @@ func TestDynamicParametersWithTerraformValues(t *testing.T) {
 		preview := testutil.RequireReceive(ctx, t, previews)
 		require.Equal(t, -1, preview.ID)
 		for _, diag := range preview.Diagnostics {
-			require.NotEqual(t, dynamicparameters.DiagCodeMissingSecret, diag.Extra.Code)
+			require.NotEqual(t, dynamicparameters.DiagCodeMissingSecretEnv, diag.Extra.Code)
+			require.NotEqual(t, dynamicparameters.DiagCodeMissingSecretFile, diag.Extra.Code)
 		}
 		require.Equal(t, []codersdk.SecretRequirementStatus{{
 			Env:         "GITHUB_TOKEN",
@@ -630,8 +631,13 @@ func TestDynamicParametersWithTerraformValues(t *testing.T) {
 		require.Error(t, err, "start must still reject unsatisfied secret requirement")
 		var sdkErr *codersdk.Error
 		require.ErrorAs(t, err, &sdkErr)
-		require.Contains(t, sdkErr.Detail, "Missing required secrets")
-		require.Contains(t, sdkErr.Detail, "env GITHUB_TOKEN")
+		// Missing secrets surface as per-secret Validation entries with a
+		// missing_secret_env / missing_secret_file Kind, not as a top-level
+		// Detail. Detail stays empty when only secrets are missing.
+		require.Len(t, sdkErr.Validations, 1)
+		require.Equal(t, "GITHUB_TOKEN", sdkErr.Validations[0].Field)
+		require.Equal(t, codersdk.ValidationErrorKindMissingSecretEnv, sdkErr.Validations[0].Kind)
+		require.Contains(t, sdkErr.Validations[0].Detail, "env GITHUB_TOKEN")
 
 		// Stop must succeed despite the unsatisfied requirement.
 		stop, err := setup.client.CreateWorkspaceBuild(ctx, wrk.ID, codersdk.CreateWorkspaceBuildRequest{

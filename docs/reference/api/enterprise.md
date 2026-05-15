@@ -857,7 +857,8 @@ curl -X POST http://coder-server:8080/api/v2/licenses/refresh-entitlements \
   "validations": [
     {
       "detail": "string",
-      "field": "string"
+      "field": "string",
+      "kind": "missing_secret_env"
     }
   ]
 }
@@ -3120,7 +3121,8 @@ curl -X PATCH http://coder-server:8080/api/v2/templates/{template}/acl \
   "validations": [
     {
       "detail": "string",
-      "field": "string"
+      "field": "string",
+      "kind": "missing_secret_env"
     }
   ]
 }
@@ -3724,7 +3726,8 @@ curl -X DELETE http://coder-server:8080/api/v2/workspaceproxies/{workspaceproxy}
   "validations": [
     {
       "detail": "string",
-      "field": "string"
+      "field": "string",
+      "kind": "missing_secret_env"
     }
   ]
 }

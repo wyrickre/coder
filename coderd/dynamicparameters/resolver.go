@@ -133,26 +133,20 @@ func ResolveParameters(
 		renderOpts = append(renderOpts, IncludeSecretRequirements())
 	}
 	result, diags = renderer.Render(ctx, ownerID, values.ValuesMap(), renderOpts...)
-	if !o.skipSecretRequirements && !diags.HasErrors() {
-		var missing []codersdk.SecretRequirementStatus
-		for _, req := range result.SecretRequirements {
-			if !req.Satisfied {
-				missing = append(missing, req)
-			}
-		}
-		if len(missing) > 0 {
-			diags = append(diags, &hcl.Diagnostic{
-				Severity: hcl.DiagError,
-				Summary:  "Missing required secrets",
-				Detail:   formatMissingSecrets(missing),
-				Extra: previewtypes.DiagnosticExtra{
-					Code: DiagCodeMissingSecret,
-				},
-			})
-		}
-	}
 	if diags.HasErrors() {
 		return nil, parameterValidationError(diags)
+	}
+	if !o.skipSecretRequirements {
+		err := parameterValidationError(nil)
+		for _, req := range result.SecretRequirements {
+			if req.Satisfied {
+				continue
+			}
+			appendMissingSecretDiagnostic(err, req)
+		}
+		if err.HasError() {
+			return nil, err
+		}
 	}
 	output = result.Output
 
@@ -293,25 +287,58 @@ func secretRequirementKind(env, file string) string {
 	}
 }
 
-func formatMissingSecrets(reqs []codersdk.SecretRequirementStatus) string {
+// appendMissingSecretDiagnostic adds a per-secret diagnostic to err so
+// that DiagnosticError.Response() can emit one ValidationError per
+// unsatisfied requirement, each tagged with the appropriate
+// codersdk.ValidationErrorKind via the diagnostic's Extra code.
+func appendMissingSecretDiagnostic(err *DiagnosticError, req codersdk.SecretRequirementStatus) {
+	var (
+		field string
+		code  string
+	)
+	switch secretRequirementKind(req.Env, req.File) {
+	case secretRequirementKindEnv:
+		field = req.Env
+		code = DiagCodeMissingSecretEnv
+	case secretRequirementKindFile:
+		field = req.File
+		code = DiagCodeMissingSecretFile
+	default:
+		// checkSecretRequirements filters malformed requirements produced
+		// by preview before they reach the resolver, so this branch is
+		// only reached if a malformed requirement slips through. Treat it
+		// as a generic top-level diagnostic.
+		err.Diagnostics = err.Diagnostics.Append(&hcl.Diagnostic{
+			Severity: hcl.DiagError,
+			Summary:  "Malformed secret requirement",
+			Detail:   req.HelpMessage,
+		})
+		return
+	}
+	err.Append(field, &hcl.Diagnostic{
+		Severity: hcl.DiagError,
+		Summary:  "Missing required secret",
+		Detail:   formatSecretRequirementDetail(req),
+		Extra: previewtypes.DiagnosticExtra{
+			Code: code,
+		},
+	})
+}
+
+// formatSecretRequirementDetail produces the user-facing Detail text for
+// a single missing coder_secret requirement.
+func formatSecretRequirementDetail(req codersdk.SecretRequirementStatus) string {
 	var b strings.Builder
-	for i, req := range reqs {
-		if i > 0 {
-			_, _ = b.WriteString("\n")
-		}
-		switch secretRequirementKind(req.Env, req.File) {
-		case secretRequirementKindEnv:
-			_, _ = fmt.Fprintf(&b, "%s %s", secretRequirementKindEnv, req.Env)
-		case secretRequirementKindFile:
-			_, _ = fmt.Fprintf(&b, "%s %s", secretRequirementKindFile, req.File)
-		default:
-			// checkSecretRequirements filters malformed requirements produced
-			// by preview before they reach the resolver.
-			_, _ = b.WriteString("malformed secret requirement")
-		}
-		if req.HelpMessage != "" {
-			_, _ = fmt.Fprintf(&b, ": %s", req.HelpMessage)
-		}
+	switch secretRequirementKind(req.Env, req.File) {
+	case secretRequirementKindEnv:
+		_, _ = fmt.Fprintf(&b, "%s %s", secretRequirementKindEnv, req.Env)
+	case secretRequirementKindFile:
+		_, _ = fmt.Fprintf(&b, "%s %s", secretRequirementKindFile, req.File)
+	default:
+		_, _ = b.WriteString("malformed secret requirement")
+	}
+	if req.HelpMessage != "" {
+		_, _ = fmt.Fprintf(&b, ": %s", req.HelpMessage)
 	}
 	return b.String()
 }

@@ -525,7 +525,8 @@ curl -X PATCH http://coder-server:8080/api/v2/workspacebuilds/{workspacebuild}/c
   "validations": [
     {
       "detail": "string",
-      "field": "string"
+      "field": "string",
+      "kind": "missing_secret_env"
     }
   ]
 }

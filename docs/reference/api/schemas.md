@@ -10660,7 +10660,8 @@ Only certain features set these fields: - FeatureManagedAgentLimit|
   "validations": [
     {
       "detail": "string",
-      "field": "string"
+      "field": "string",
+      "kind": "missing_secret_env"
     }
   ]
 }
@@ -13632,16 +13633,32 @@ If the schedule is empty, the user will be updated to use the default schedule.|
 ```json
 {
   "detail": "string",
-  "field": "string"
+  "field": "string",
+  "kind": "missing_secret_env"
 }
 ```
 
 ### Properties
 
-| Name     | Type   | Required | Restrictions | Description |
-|----------|--------|----------|--------------|-------------|
-| `detail` | string | true     |              |             |
-| `field`  | string | true     |              |             |
+| Name     | Type                                                         | Required | Restrictions | Description                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+|----------|--------------------------------------------------------------|----------|--------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `detail` | string                                                       | true     |              |                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| `field`  | string                                                       | true     |              |                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| `kind`   | [codersdk.ValidationErrorKind](#codersdkvalidationerrorkind) | false    |              | Kind optionally categorizes the validation error. It exists so a response that mixes entries from different sources (for example, parameter validations and missing coder_secret requirements) can be routed by consumers without inspecting Field or Detail. When every entry in a Validations slice comes from the same source, callers leave Kind unset and consumers apply default rendering. See the ValidationErrorKind constants for known values. |
+
+## codersdk.ValidationErrorKind
+
+```json
+"missing_secret_env"
+```
+
+### Properties
+
+#### Enumerated Values
+
+| Value(s)                                    |
+|---------------------------------------------|
+| `missing_secret_env`, `missing_secret_file` |
 
 ## codersdk.ValidationMonotonicOrder
 

@@ -478,6 +478,26 @@ export class ParameterValidationError extends Error {
 	}
 }
 
+// MissingSecretsError is thrown when an update build fails because the
+// active template version declares coder_secret requirements the workspace
+// owner has not satisfied. The frontend surfaces a secrets-specific dialog
+// that mirrors the dynamic-parameter dialog: a count plus a navigation
+// affordance to the user-secrets management page.
+export class MissingSecretsError extends Error {
+	constructor(public readonly secrets: FieldError[]) {
+		super("Required secrets are missing for new template version");
+	}
+}
+
+// Validation entries with these `kind` values represent missing
+// coder_secret requirements rather than parameter validation failures.
+const missingSecretKinds: ReadonlySet<string> = new Set(
+	TypesGen.ValidationErrorKinds,
+);
+
+const isMissingSecretValidation = (v: FieldError): boolean =>
+	v.kind !== undefined && missingSecretKinds.has(v.kind);
+
 export type GetProvisionerJobsParams = {
 	status?: string;
 	limit?: number;
@@ -2551,8 +2571,12 @@ class ApiMethods {
 				rich_parameter_values: newBuildParameters,
 			});
 		} catch (error) {
-			// If the build failed because of a parameter validation error, then we
-			// throw a special sentinel error that can be caught by the caller.
+			// If the build failed because of a parameter or secret validation
+			// error, throw a sentinel error so the caller can open the
+			// appropriate dialog. Parameter validations take priority: they
+			// surface during stop+start, while secret requirements only fire
+			// on start, so a workspace that has both will typically discover
+			// parameters first.
 			if (
 				isDynamicParametersEnabled &&
 				isApiError(error) &&
@@ -2560,10 +2584,20 @@ class ApiMethods {
 				error.response.data.validations &&
 				error.response.data.validations.length > 0
 			) {
-				throw new ParameterValidationError(
-					activeVersionId,
-					error.response.data.validations,
+				const validations = error.response.data.validations;
+				const parameterValidations = validations.filter(
+					(v) => !isMissingSecretValidation(v),
 				);
+				if (parameterValidations.length > 0) {
+					throw new ParameterValidationError(
+						activeVersionId,
+						parameterValidations,
+					);
+				}
+				const missingSecrets = validations.filter(isMissingSecretValidation);
+				if (missingSecrets.length > 0) {
+					throw new MissingSecretsError(missingSecrets);
+				}
 			}
 			throw error;
 		}

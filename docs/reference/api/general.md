@@ -23,7 +23,8 @@ curl -X GET http://coder-server:8080/api/v2/ \
   "validations": [
     {
       "detail": "string",
-      "field": "string"
+      "field": "string",
+      "kind": "missing_secret_env"
     }
   ]
 }

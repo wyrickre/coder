@@ -326,8 +326,14 @@ func TestResolveParameters(t *testing.T) {
 		resp, ok := httperror.IsResponder(err)
 		require.True(t, ok)
 		_, respErr := resp.Response()
-		require.Contains(t, respErr.Detail, "Missing required secrets")
-		require.Contains(t, respErr.Detail, "env GITHUB_TOKEN: Add a GitHub PAT")
+		// Missing secrets now flow as keyed validation entries with a
+		// missing_secret_env / missing_secret_file Kind, not as a
+		// top-level Detail. Detail stays empty for the secret-only case.
+		require.Empty(t, respErr.Detail)
+		require.Len(t, respErr.Validations, 1)
+		require.Equal(t, "GITHUB_TOKEN", respErr.Validations[0].Field)
+		require.Equal(t, codersdk.ValidationErrorKindMissingSecretEnv, respErr.Validations[0].Kind)
+		require.Contains(t, respErr.Validations[0].Detail, "Add a GitHub PAT")
 	})
 
 	t.Run("FinalRenderErrorSuppressesMissingSecretSynthesis", func(t *testing.T) {

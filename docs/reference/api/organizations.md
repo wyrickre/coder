@@ -186,7 +186,8 @@ curl -X DELETE http://coder-server:8080/api/v2/organizations/{organization} \
   "validations": [
     {
       "detail": "string",
-      "field": "string"
+      "field": "string",
+      "kind": "missing_secret_env"
     }
   ]
 }

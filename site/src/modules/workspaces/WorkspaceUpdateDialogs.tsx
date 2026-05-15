@@ -1,6 +1,10 @@
 import { type FC, useState } from "react";
 import { useMutation, useQueryClient } from "react-query";
-import { MissingBuildParameters, ParameterValidationError } from "#/api/api";
+import {
+	MissingBuildParameters,
+	MissingSecretsError,
+	ParameterValidationError,
+} from "#/api/api";
 import { updateWorkspace } from "#/api/queries/workspaces";
 import type {
 	TemplateVersion,
@@ -10,6 +14,7 @@ import type {
 } from "#/api/typesGenerated";
 import { ConfirmDialog } from "#/components/Dialogs/ConfirmDialog/ConfirmDialog";
 import { MemoizedInlineMarkdown } from "#/components/Markdown/InlineMarkdown";
+import { MissingSecretsDialog } from "#/modules/workspaces/WorkspaceMoreActions/MissingSecretsDialog";
 import { UpdateBuildParametersDialog } from "#/modules/workspaces/WorkspaceMoreActions/UpdateBuildParametersDialog";
 import { UpdateBuildParametersDialogExperimental } from "#/modules/workspaces/WorkspaceMoreActions/UpdateBuildParametersDialogExperimental";
 
@@ -26,6 +31,7 @@ type UseWorkspaceUpdateResult = {
 	dialogs: {
 		updateConfirmation: UpdateConfirmationDialogProps;
 		missingBuildParameters: MissingBuildParametersDialogProps;
+		missingSecrets: MissingSecretsDialogProps;
 	};
 };
 
@@ -86,6 +92,12 @@ export const useWorkspaceUpdate = ({
 					}
 				},
 			},
+			missingSecrets: {
+				error: updateWorkspaceMutation.error,
+				onClose: () => {
+					updateWorkspaceMutation.reset();
+				},
+			},
 		},
 	};
 };
@@ -93,16 +105,19 @@ export const useWorkspaceUpdate = ({
 type WorkspaceUpdateDialogsProps = {
 	updateConfirmation: UpdateConfirmationDialogProps;
 	missingBuildParameters: MissingBuildParametersDialogProps;
+	missingSecrets: MissingSecretsDialogProps;
 };
 
 export const WorkspaceUpdateDialogs: FC<WorkspaceUpdateDialogsProps> = ({
 	updateConfirmation,
 	missingBuildParameters,
+	missingSecrets,
 }) => {
 	return (
 		<>
 			<UpdateConfirmationDialog {...updateConfirmation} />
 			<MissingBuildParametersDialog {...missingBuildParameters} />
+			<MissingSecretsDialogContainer {...missingSecrets} />
 		</>
 	);
 };
@@ -180,4 +195,19 @@ const MissingBuildParametersDialog: FC<MissingBuildParametersDialogProps> = ({
 			templateVersionId={versionId}
 		/>
 	);
+};
+
+type MissingSecretsDialogProps = {
+	error: unknown;
+	onClose: () => void;
+};
+
+const MissingSecretsDialogContainer: FC<MissingSecretsDialogProps> = ({
+	error,
+	onClose,
+}) => {
+	const isOpen = error instanceof MissingSecretsError;
+	const count = error instanceof MissingSecretsError ? error.secrets.length : 0;
+
+	return <MissingSecretsDialog open={isOpen} onClose={onClose} count={count} />;
 };

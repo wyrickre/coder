@@ -2245,7 +2245,8 @@ curl -X PUT http://coder-server:8080/api/v2/workspaces/{workspace}/extend \
   "validations": [
     {
       "detail": "string",
-      "field": "string"
+      "field": "string",
+      "kind": "missing_secret_env"
     }
   ]
 }

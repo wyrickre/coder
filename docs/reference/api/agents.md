@@ -227,7 +227,8 @@ curl -X PATCH http://coder-server:8080/api/v2/workspaceagents/me/app-status \
   "validations": [
     {
       "detail": "string",
-      "field": "string"
+      "field": "string",
+      "kind": "missing_secret_env"
     }
   ]
 }
@@ -459,7 +460,8 @@ curl -X PATCH http://coder-server:8080/api/v2/workspaceagents/me/logs \
   "validations": [
     {
       "detail": "string",
-      "field": "string"
+      "field": "string",
+      "kind": "missing_secret_env"
     }
   ]
 }
@@ -930,7 +932,8 @@ curl -X POST http://coder-server:8080/api/v2/workspaceagents/{workspaceagent}/co
   "validations": [
     {
       "detail": "string",
-      "field": "string"
+      "field": "string",
+      "kind": "missing_secret_env"
     }
   ]
 }

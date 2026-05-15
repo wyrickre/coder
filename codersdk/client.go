@@ -589,10 +589,34 @@ type Response struct {
 	Validations []ValidationError `json:"validations,omitempty"`
 }
 
+// ValidationErrorKind categorizes a ValidationError when a single
+// Validations slice may mix entries from different sources, so consumers
+// can route each entry to the appropriate UX. For example, a workspace
+// build response may carry both parameter validations and missing
+// coder_secret requirements, and the frontend opens a different dialog
+// per category.
+//
+// Most endpoints emit homogeneous Validations slices and have no need
+// for a Kind value; in those cases the field stays unset.
+type ValidationErrorKind string
+
+const (
+	ValidationErrorKindMissingSecretEnv  ValidationErrorKind = "missing_secret_env"
+	ValidationErrorKindMissingSecretFile ValidationErrorKind = "missing_secret_file"
+)
+
 // ValidationError represents a scoped error to a user input.
 type ValidationError struct {
 	Field  string `json:"field" validate:"required"`
 	Detail string `json:"detail" validate:"required"`
+	// Kind optionally categorizes the validation error. It exists so a
+	// response that mixes entries from different sources (for example,
+	// parameter validations and missing coder_secret requirements) can
+	// be routed by consumers without inspecting Field or Detail. When
+	// every entry in a Validations slice comes from the same source,
+	// callers leave Kind unset and consumers apply default rendering.
+	// See the ValidationErrorKind constants for known values.
+	Kind ValidationErrorKind `json:"kind,omitempty"`
 }
 
 func (e ValidationError) Error() string {

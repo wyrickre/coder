@@ -63,10 +63,18 @@ func IncludeSecretRequirements() RenderOption {
 
 // Diagnostic extra codes for secret-requirement validation.
 const (
-	DiagCodeMissingSecret             = "missing_secret"
+	DiagCodeMissingSecretEnv          = "missing_secret_env"
+	DiagCodeMissingSecretFile         = "missing_secret_file"
 	DiagCodeOwnerSecretsFetchFailed   = "owner_secrets_fetch_failed"
 	DiagCodeSecretValidationForbidden = "secret_validation_forbidden"
 )
+
+// isMissingSecretDiagCode returns true when the given diagnostic code
+// identifies one of the per-secret missing-requirement diagnostics that
+// the resolver synthesizes for each unsatisfied coder_secret.
+func isMissingSecretDiagCode(code string) bool {
+	return code == DiagCodeMissingSecretEnv || code == DiagCodeMissingSecretFile
+}
 
 // loader is used to load the necessary coder objects for rendering a template
 // version's parameters. The output is a Renderer, which is the object that uses
