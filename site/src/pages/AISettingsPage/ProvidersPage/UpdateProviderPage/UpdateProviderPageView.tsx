@@ -109,6 +109,15 @@ const UpdateProviderPageView: React.FC = () => {
 		return <Navigate to="/ai/settings" replace />;
 	}
 
+	// The keys query only fires for openai/anthropic, and `ProviderForm` seeds
+	// its initial values once at mount. If we render the form before the keys
+	// query resolves, the saved-credential mask never gets seeded into the
+	// `apiKey` field. Block on the keys query the same way we block on the
+	// provider query.
+	if (providerIsOpenAiAnthropic && keysQuery.isLoading) {
+		return <Loader fullscreen />;
+	}
+
 	const currentKey = providerIsOpenAiAnthropic
 		? pickCurrentKey(keysQuery.data ?? [])
 		: undefined;
