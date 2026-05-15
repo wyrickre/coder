@@ -151,6 +151,8 @@ type ProviderFormProps = {
 	editing?: boolean;
 	/** When editing Bedrock and the API already has keys, show masked placeholders until cleared. */
 	bedrockSavedAccessCredentials?: boolean;
+	/** When editing openai/anthropic and a key is on file, show a masked placeholder until cleared. */
+	openAiAnthropicSavedApiKey?: boolean;
 	initialValues?: Partial<ProviderFormValues>;
 	onSubmit?: (values: ProviderFormValues) => void;
 	isLoading?: boolean;
@@ -160,6 +162,7 @@ type ProviderFormProps = {
 export const ProviderForm: FC<ProviderFormProps> = ({
 	editing = false,
 	bedrockSavedAccessCredentials = false,
+	openAiAnthropicSavedApiKey = false,
 	initialValues,
 	onSubmit,
 	isLoading = false,
@@ -175,10 +178,16 @@ export const ProviderForm: FC<ProviderFormProps> = ({
 	const [bedrockKeysMasked, setBedrockKeysMasked] = useState(
 		() => bedrockSavedAccessCredentials,
 	);
+	const [openAiAnthropicApiKeyMasked, setOpenAiAnthropicApiKeyMasked] =
+		useState(() => openAiAnthropicSavedApiKey);
 
 	useEffect(() => {
 		setBedrockKeysMasked(bedrockSavedAccessCredentials);
 	}, [bedrockSavedAccessCredentials]);
+
+	useEffect(() => {
+		setOpenAiAnthropicApiKeyMasked(openAiAnthropicSavedApiKey);
+	}, [openAiAnthropicSavedApiKey]);
 
 	const form = useFormik<ProviderFormValues>({
 		initialValues: {
@@ -192,7 +201,10 @@ export const ProviderForm: FC<ProviderFormProps> = ({
 			accessKeySecret: bedrockSavedAccessCredentials
 				? SAVED_CREDENTIAL_MASK
 				: "",
-			apiKey: "",
+			// Mirror the Bedrock pattern for openai/anthropic. A key on file is
+			// shown as a mask; focusing or pressing "Clear key" clears it so the
+			// user can type a replacement.
+			apiKey: openAiAnthropicSavedApiKey ? SAVED_CREDENTIAL_MASK : "",
 		},
 		validationSchema: getProviderFormSchema(editing),
 		onSubmit: onSubmit ?? (() => {}),
@@ -206,6 +218,11 @@ export const ProviderForm: FC<ProviderFormProps> = ({
 		void form.setFieldValue("accessKey", "");
 		void form.setFieldValue("accessKeySecret", "");
 		setBedrockKeysMasked(false);
+	};
+
+	const clearOpenAiAnthropicApiKey = () => {
+		void form.setFieldValue("apiKey", "");
+		setOpenAiAnthropicApiKeyMasked(false);
 	};
 
 	return (
@@ -277,25 +294,46 @@ export const ProviderForm: FC<ProviderFormProps> = ({
 							description="The name of the provider. This is used to identify the provider in the UI."
 							className="w-full"
 						/>
+						{/* API keys live on a sub-resource server-side; the parent
+						    page chains POST /keys (and revokes the previous key when
+						    rotating) after the provider PATCH succeeds. We treat an
+						    untouched mask as "keep the existing key". */}
+						<div className="flex flex-col gap-4">
+							<FormField
+								field={getFieldHelpers("apiKey")}
+								label="API key"
+								type="password"
+								description={
+									editing && !openAiAnthropicApiKeyMasked
+										? "Submitting replaces the existing key."
+										: undefined
+								}
+								className="w-full"
+								autoComplete="new-password"
+								onFocus={
+									openAiAnthropicApiKeyMasked
+										? clearOpenAiAnthropicApiKey
+										: undefined
+								}
+							/>
+							{openAiAnthropicApiKeyMasked && (
+								<Button
+									type="button"
+									variant="outline"
+									className="self-start"
+									onClick={clearOpenAiAnthropicApiKey}
+								>
+									<TrashIcon />
+									<span>Clear key</span>
+								</Button>
+							)}
+						</div>
 						<FormField
 							field={getFieldHelpers("baseUrl")}
 							label="Custom endpoint"
 							description="Custom endpoint for this provider. Leave empty to use the default."
 							className="w-full"
 						/>
-						{/* API keys are managed via a sub-resource on the server, so
-						    we only collect an initial key on the create flow here.
-						    Existing providers manage their key via the keys panel on the
-						    update page. */}
-						{!editing && (
-							<FormField
-								field={getFieldHelpers("apiKey")}
-								label="API key"
-								type="password"
-								className="w-full"
-								autoComplete="new-password"
-							/>
-						)}
 					</>
 				)}
 

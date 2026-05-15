@@ -100,6 +100,18 @@ export const providerFormValuesToCreate = (
 };
 
 /**
+ * Output of {@link providerFormValuesToUpdate}. `apiKey` is only set for
+ * openai/anthropic providers; the caller is responsible for chaining
+ * `POST /providers/{id}/keys` (and rotating any previous key) after the
+ * provider PATCH succeeds. Bedrock providers carry their credentials in
+ * `request.settings` and never emit an `apiKey`.
+ */
+type ProviderUpdatePayload = {
+	request: UpdateAIProviderRequest;
+	apiKey?: string;
+};
+
+/**
  * Build a PATCH payload for an existing provider. Bedrock secrets follow an
  * "empty = keep" contract: if the user did not clear the masked inputs, we
  * send no Bedrock secret fields and the server leaves them unchanged. The
@@ -109,7 +121,7 @@ export const providerFormValuesToCreate = (
 export const providerFormValuesToUpdate = (
 	values: ProviderFormValues,
 	existingProvider: AIProvider,
-): UpdateAIProviderRequest => {
+): ProviderUpdatePayload => {
 	const base: UpdateAIProviderRequest = {
 		display_name: values.name.trim(),
 		enabled: values.enabled,
@@ -117,7 +129,10 @@ export const providerFormValuesToUpdate = (
 	};
 
 	if (values.type !== "bedrock") {
-		return base;
+		return {
+			request: base,
+			apiKey: sanitizeCredential(values.apiKey) || undefined,
+		};
 	}
 
 	const newAccessKey = sanitizeCredential(values.accessKey);
@@ -142,7 +157,7 @@ export const providerFormValuesToUpdate = (
 			: {}),
 	};
 
-	return { ...base, settings };
+	return { request: { ...base, settings } };
 };
 
 /** Populate the form from an `AIProvider` fetched from the API. */

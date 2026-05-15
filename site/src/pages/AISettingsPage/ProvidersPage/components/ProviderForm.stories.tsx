@@ -64,6 +64,21 @@ export const EditBedrockKeepCredentials: Story = {
 export const EditProvider: Story = {
 	args: {
 		editing: true,
+		openAiAnthropicSavedApiKey: true,
+		initialValues: {
+			type: "anthropic",
+			name: "production-anthropic",
+			baseUrl: "https://api.anthropic.com",
+			apiKey: "",
+			enabled: true,
+		},
+	},
+};
+
+export const EditOpenAiAnthropicNoSavedKey: Story = {
+	args: {
+		editing: true,
+		openAiAnthropicSavedApiKey: false,
 		initialValues: {
 			type: "anthropic",
 			name: "production-anthropic",

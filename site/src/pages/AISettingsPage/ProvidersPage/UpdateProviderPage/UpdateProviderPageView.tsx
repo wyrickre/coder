@@ -7,9 +7,11 @@ import { toast } from "sonner";
 import { getErrorMessage } from "#/api/errors";
 import {
 	aiProvider,
+	aiProviderKeys,
 	deleteAIProviderMutation,
 	updateAIProviderMutation,
 } from "#/api/queries/aiProviders";
+import type { AIProviderKey } from "#/api/typesGenerated";
 import { Avatar } from "#/components/Avatar/Avatar";
 import { Button } from "#/components/Button/Button";
 import { DeleteDialog } from "#/components/Dialogs/DeleteDialog/DeleteDialog";
@@ -18,7 +20,6 @@ import {
 	PageHeader,
 	PageHeaderTitle,
 } from "#/components/PageHeader/PageHeader";
-import { ApiKeyPanel } from "../components/ApiKeyPanel";
 import { ProviderForm } from "../components/ProviderForm";
 import { getProviderIcon } from "../components/ProviderIcon";
 import {
@@ -27,6 +28,20 @@ import {
 	isBedrockProvider,
 	providerFormValuesToUpdate,
 } from "../components/providerFormApiMap";
+
+/**
+ * The wire API supports many keys per provider, but we sort by created_at
+ * descending and treat the newest as "current" so the single-key UI reads
+ * naturally even after a rotation.
+ */
+const pickCurrentKey = (
+	keys: readonly AIProviderKey[],
+): AIProviderKey | undefined => {
+	if (keys.length === 0) return undefined;
+	return keys.reduce((latest, key) =>
+		Date.parse(key.created_at) > Date.parse(latest.created_at) ? key : latest,
+	);
+};
 
 const UpdateProviderPageView: React.FC = () => {
 	const { providerId } = useParams<{ providerId: string }>();
@@ -40,6 +55,18 @@ const UpdateProviderPageView: React.FC = () => {
 		enabled: Boolean(providerId),
 	});
 
+	const provider = providerQuery.data;
+	const providerIsOpenAiAnthropic =
+		provider !== undefined && !isBedrockProvider(provider);
+
+	// Only openai/anthropic providers use the /keys sub-resource. Bedrock
+	// authenticates via `settings` and the server rejects key POSTs for it,
+	// so we skip the query entirely.
+	const keysQuery = useQuery({
+		...aiProviderKeys(providerId ?? ""),
+		enabled: Boolean(provider) && providerIsOpenAiAnthropic,
+	});
+
 	const updateMutation = useMutation(
 		updateAIProviderMutation(queryClient, providerId ?? ""),
 	);
@@ -47,8 +74,6 @@ const UpdateProviderPageView: React.FC = () => {
 	const deleteMutation = useMutation(
 		deleteAIProviderMutation(queryClient, providerId ?? ""),
 	);
-
-	const provider = providerQuery.data;
 
 	if (!providerId) {
 		return <Navigate to="/ai/settings" replace />;
@@ -83,6 +108,12 @@ const UpdateProviderPageView: React.FC = () => {
 	if (!provider) {
 		return <Navigate to="/ai/settings" replace />;
 	}
+
+	const currentKey = providerIsOpenAiAnthropic
+		? pickCurrentKey(keysQuery.data ?? [])
+		: undefined;
+	const openAiAnthropicSavedApiKey =
+		providerIsOpenAiAnthropic && currentKey !== undefined;
 
 	return (
 		<>
@@ -131,12 +162,24 @@ const UpdateProviderPageView: React.FC = () => {
 						bedrockSavedAccessCredentials={hasBedrockStoredCredentials(
 							provider,
 						)}
+						openAiAnthropicSavedApiKey={openAiAnthropicSavedApiKey}
 						initialValues={aiProviderToFormValues(provider)}
 						isLoading={updateMutation.isPending}
 						submitError={updateMutation.error}
 						onSubmit={(values) => {
+							const { request, apiKey } = providerFormValuesToUpdate(
+								values,
+								provider,
+							);
 							updateMutation.mutate(
-								providerFormValuesToUpdate(values, provider),
+								{
+									provider: request,
+									apiKey,
+									// Only rotate the previous key when the user supplied a
+									// new one. An untouched mask sanitizes to undefined, so
+									// the chained POST/DELETE is skipped entirely.
+									previousKeyId: apiKey ? currentKey?.id : undefined,
+								},
 								{
 									onSuccess: () => {
 										toast.success(`Provider "${provider.name}" updated.`);
@@ -154,7 +197,6 @@ const UpdateProviderPageView: React.FC = () => {
 						}}
 					/>
 				</div>
-				{!isBedrockProvider(provider) && <ApiKeyPanel provider={provider} />}
 				<DeleteDialog
 					key={provider.name}
 					isOpen={deleteDialogOpen}
