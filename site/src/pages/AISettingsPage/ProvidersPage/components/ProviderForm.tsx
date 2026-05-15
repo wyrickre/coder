@@ -255,7 +255,13 @@ const CredentialField: FC<CredentialFieldProps> = ({
 		/>
 	);
 
-	const trashNode = (
+	// Only show the trash button while the input is locked at the seeded
+	// credential mask. Once the user clears the field (or has been typing a
+	// fresh credential since mount), the trash is hidden so they don't see it
+	// floating next to a half-typed key. In grid-row layout we render an
+	// empty placeholder so the parent grid keeps its third column and the
+	// next row stays aligned.
+	const trashNode = disabled ? (
 		<Button
 			type="button"
 			variant="destructive"
@@ -266,7 +272,7 @@ const CredentialField: FC<CredentialFieldProps> = ({
 			<TrashIcon aria-hidden="true" />
 			<span className="sr-only">{trashLabel}</span>
 		</Button>
-	);
+	) : null;
 
 	if (layout === "grid-row") {
 		return (
@@ -277,7 +283,7 @@ const CredentialField: FC<CredentialFieldProps> = ({
 					{descriptionNode}
 					{helperNode}
 				</div>
-				{trashNode}
+				{trashNode ?? <div aria-hidden="true" className="size-10" />}
 			</>
 		);
 	}
