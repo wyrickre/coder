@@ -3162,7 +3162,9 @@ func TestPersonalAndWorkspaceSkillCollisionInSystemPrompt(t *testing.T) {
 	require.Equal(t, skillspkg.SourceWorkspace, workspace.Source)
 
 	_, err = skillspkg.Lookup(resolved, "deploy")
-	require.ErrorIs(t, err, skillspkg.ErrSkillNotFound)
+	require.ErrorIs(t, err, skillspkg.ErrSkillAmbiguous)
+	require.ErrorContains(t, err, "personal/deploy")
+	require.ErrorContains(t, err, "workspace/deploy")
 }
 
 func TestSkillIndexRefreshReplacesStaleAliases(t *testing.T) {
