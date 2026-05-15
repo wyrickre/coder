@@ -279,7 +279,7 @@ type ReadSkillOptions struct {
 
 // ReadSkillArgs are the parameters accepted by read_skill.
 type ReadSkillArgs struct {
-	Name string `json:"name" description:"The kebab-case name of the skill to read."`
+	Name string `json:"name" description:"The name or qualified alias of the skill to read."`
 }
 
 // ReadSkill returns an AgentTool that reads the full instructions
@@ -350,7 +350,7 @@ func ReadSkill(options ReadSkillOptions) fantasy.AgentTool {
 // ReadSkillFileArgs are the parameters accepted by
 // read_skill_file.
 type ReadSkillFileArgs struct {
-	Name string `json:"name" description:"The kebab-case name of the skill."`
+	Name string `json:"name" description:"The name or qualified alias of the skill to read."`
 	Path string `json:"path" description:"Relative path to a file in the skill directory (e.g. roles/security-reviewer.md)."`
 }
 
