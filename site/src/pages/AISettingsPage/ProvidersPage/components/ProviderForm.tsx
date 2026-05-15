@@ -322,6 +322,7 @@ export const ProviderForm: FC<ProviderFormProps> = ({
 				{(typeSelectValue === "openai" || typeSelectValue === "anthropic") && (
 					<>
 						<FormField
+							required
 							field={getFieldHelpers("name")}
 							label="Name"
 							description="The name of the provider. This is used to identify the provider in the UI."
@@ -334,6 +335,7 @@ export const ProviderForm: FC<ProviderFormProps> = ({
 						    untouched mask as "keep the existing key". */}
 						<div className="flex flex-col gap-4">
 							<FormField
+								required
 								field={getFieldHelpers("apiKey")}
 								label="API key"
 								type="password"
@@ -376,6 +378,7 @@ export const ProviderForm: FC<ProviderFormProps> = ({
 				{typeSelectValue === "bedrock" && (
 					<>
 						<FormField
+							required
 							field={getFieldHelpers("name")}
 							label="Name"
 							description="The name of the provider. This is used to identify the provider in the UI."
@@ -383,6 +386,7 @@ export const ProviderForm: FC<ProviderFormProps> = ({
 							placeholder={namePlaceholder(form.values.type)}
 						/>
 						<FormField
+							required
 							field={getFieldHelpers("baseUrl")}
 							label="Base URL"
 							description={
@@ -398,6 +402,7 @@ export const ProviderForm: FC<ProviderFormProps> = ({
 							placeholder={baseUrlPlaceholder(form.values.type)}
 						/>
 						<FormField
+							required
 							field={{
 								...getFieldHelpers("model"),
 								helperText: (
@@ -413,6 +418,7 @@ export const ProviderForm: FC<ProviderFormProps> = ({
 							placeholder="anthropic.claude-3-5-sonnet-20241022-v2:0"
 						/>
 						<FormField
+							required
 							field={{
 								...getFieldHelpers("smallFastModel"),
 								helperText: (
@@ -428,6 +434,7 @@ export const ProviderForm: FC<ProviderFormProps> = ({
 						/>
 						<div className="flex flex-col gap-4">
 							<FormField
+								required
 								field={getFieldHelpers("accessKey")}
 								label="Access key"
 								description={
@@ -439,6 +446,7 @@ export const ProviderForm: FC<ProviderFormProps> = ({
 								onFocus={bedrockKeysMasked ? clearBedrockKeys : undefined}
 							/>
 							<FormField
+								required
 								field={getFieldHelpers("accessKeySecret")}
 								label="Access key secret"
 								description="Your AWS Secret Access Key associated with the access key ID. Stored securely and used for request signing."

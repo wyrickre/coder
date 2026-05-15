@@ -28,10 +28,16 @@ export const FormField: FC<FormFieldProps> = ({
 	]
 		.filter(Boolean)
 		.join(" ");
+	const required = inputProps.required ?? false;
 
 	return (
 		<div className="flex flex-col gap-2">
-			<Label htmlFor={id}>{label}</Label>
+			<Label htmlFor={id}>
+				{label}{" "}
+				{required && (
+					<span className="text-xs font-bold text-content-destructive">*</span>
+				)}
+			</Label>
 			{description && (
 				<div id={descriptionId} className="text-xs text-content-secondary">
 					{description}
