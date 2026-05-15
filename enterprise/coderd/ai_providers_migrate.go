@@ -164,16 +164,34 @@ func providersFromEnv(cfg codersdk.AIBridgeConfig) ([]desiredAIProvider, error) 
 			dp.Type = database.AiProviderTypeOpenai
 		case aibridge.ProviderAnthropic:
 			dp.Type = database.AiProviderTypeAnthropic
+		case string(codersdk.AIProviderTypeAzure):
+			dp.Type = database.AiProviderTypeAzure
+		case string(codersdk.AIProviderTypeBedrock):
+			dp.Type = database.AiProviderTypeBedrock
+		case string(codersdk.AIProviderTypeGoogle):
+			dp.Type = database.AiProviderTypeGoogle
+		case string(codersdk.AIProviderTypeOpenAICompat):
+			dp.Type = database.AiProviderTypeOpenaiCompat
+		case string(codersdk.AIProviderTypeOpenrouter):
+			dp.Type = database.AiProviderTypeOpenrouter
+		case string(codersdk.AIProviderTypeVercel):
+			dp.Type = database.AiProviderTypeVercel
 		default:
-			// Skip other types (e.g. copilot) until they are added
-			// to the database enum.
+			// Skip other types (e.g. copilot) that don't yet have a
+			// matching value in the ai_provider_type enum. The env-
+			// parsing validator in cli/server.go already rejects truly
+			// unknown types, so this branch only catches the gap
+			// between env-acceptable types and DB-persistable types.
 			continue
 		}
 
 		dp.BaseURL = p.BaseURL
-		// Bedrock fields only apply to Anthropic.
+		// Bedrock SigV4 credentials apply to the legacy Anthropic-with-
+		// Bedrock flow (where the discriminator lives in Settings.Bedrock
+		// and the row is stored as type=anthropic) and to the explicit
+		// bedrock provider type.
 		isBedrock := false
-		if dp.Type == database.AiProviderTypeAnthropic {
+		if dp.Type == database.AiProviderTypeAnthropic || dp.Type == database.AiProviderTypeBedrock {
 			bedrock := codersdk.AIProviderBedrockSettings{
 				Region:         p.BedrockRegion,
 				Model:          p.BedrockModel,

@@ -3029,16 +3029,20 @@ func ReadAIProvidersFromEnv(logger slog.Logger, environ []string) ([]codersdk.AI
 			return nil, xerrors.Errorf("provider %d: TYPE is required", i)
 		}
 
-		switch p.Type {
-		case aibridge.ProviderOpenAI, aibridge.ProviderAnthropic, aibridge.ProviderCopilot:
-		default:
-			return nil, xerrors.Errorf("provider %d: unknown TYPE %q (must be %s, %s, or %s)",
-				i, p.Type, aibridge.ProviderOpenAI, aibridge.ProviderAnthropic, aibridge.ProviderCopilot)
+		if !isValidEnvAIProviderType(p.Type) {
+			return nil, xerrors.Errorf("provider %d: unknown TYPE %q (must be one of: %s)",
+				i, p.Type, strings.Join(envAIProviderTypes(), ", "))
 		}
 
-		if p.Type != aibridge.ProviderAnthropic && hasBedrockFields(*p) {
-			return nil, xerrors.Errorf("provider %d (%s): BEDROCK_* fields are only supported with TYPE %q",
-				i, p.Type, aibridge.ProviderAnthropic)
+		// BEDROCK_* fields encode AWS SigV4 credentials. They are only
+		// meaningful for providers that authenticate against AWS Bedrock:
+		// the legacy Anthropic-with-Bedrock flow and the explicit
+		// bedrock provider type.
+		if p.Type != aibridge.ProviderAnthropic &&
+			p.Type != string(codersdk.AIProviderTypeBedrock) &&
+			hasBedrockFields(*p) {
+			return nil, xerrors.Errorf("provider %d (%s): BEDROCK_* fields are only supported with TYPE %q or %q",
+				i, p.Type, aibridge.ProviderAnthropic, codersdk.AIProviderTypeBedrock)
 		}
 
 		if p.Type == aibridge.ProviderCopilot && len(p.Keys) > 0 {
@@ -3070,6 +3074,34 @@ func hasBedrockFields(p codersdk.AIProviderConfig) bool {
 	return p.BedrockBaseURL != "" || p.BedrockRegion != "" ||
 		len(p.BedrockAccessKeys) > 0 || len(p.BedrockAccessKeySecrets) > 0 ||
 		p.BedrockModel != "" || p.BedrockSmallFastModel != ""
+}
+
+// envAIProviderTypes returns the set of provider TYPE values accepted
+// by CODER_AIBRIDGE_PROVIDER_<N>_TYPE. This is the full set of AI
+// provider types Coder understands, not just the aibridge fantasy
+// client names; mapping a type onto a specific aibridge client is the
+// routing layer's job (see buildProvidersFromDB).
+func envAIProviderTypes() []string {
+	return []string{
+		string(codersdk.AIProviderTypeOpenAI),
+		string(codersdk.AIProviderTypeAnthropic),
+		aibridge.ProviderCopilot,
+		string(codersdk.AIProviderTypeAzure),
+		string(codersdk.AIProviderTypeBedrock),
+		string(codersdk.AIProviderTypeGoogle),
+		string(codersdk.AIProviderTypeOpenAICompat),
+		string(codersdk.AIProviderTypeOpenrouter),
+		string(codersdk.AIProviderTypeVercel),
+	}
+}
+
+func isValidEnvAIProviderType(t string) bool {
+	for _, allowed := range envAIProviderTypes() {
+		if t == allowed {
+			return true
+		}
+	}
+	return false
 }
 
 // maxKeysPerProvider is the maximum number of keys allowed per
