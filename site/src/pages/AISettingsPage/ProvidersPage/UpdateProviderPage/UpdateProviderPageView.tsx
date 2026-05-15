@@ -26,7 +26,6 @@ import {
 	PageHeader,
 	PageHeaderTitle,
 } from "#/components/PageHeader/PageHeader";
-import { OrganizationPicker } from "../components/OrganizationPicker";
 import { ProviderForm } from "../components/ProviderForm";
 import { getProviderIcon } from "../components/ProviderIcon";
 import {
@@ -163,25 +162,17 @@ const UpdateProviderPageView: React.FC<UpdateProviderPageViewProps> = ({
 				<PageHeader
 					className="pt-6 pb-0"
 					actions={
-						<>
-							<OrganizationPicker
-								organizations={organizations}
-								value={selectedOrganizationId ?? ""}
-								disabled
-								ariaLabel="Provider organization"
-							/>
-							<Button
-								type="button"
-								variant="destructive"
-								disabled={updateMutation.isPending || deleteMutation.isPending}
-								onClick={() => {
-									setDeleteDialogOpen(true);
-								}}
-							>
-								<TrashIcon />
-								<span>Delete provider</span>
-							</Button>
-						</>
+						<Button
+							type="button"
+							variant="destructive"
+							disabled={updateMutation.isPending || deleteMutation.isPending}
+							onClick={() => {
+								setDeleteDialogOpen(true);
+							}}
+						>
+							<TrashIcon />
+							<span>Delete provider</span>
+						</Button>
 					}
 				>
 					<div className="flex items-center gap-4">
@@ -208,6 +199,11 @@ const UpdateProviderPageView: React.FC<UpdateProviderPageViewProps> = ({
 						initialValues={aiProviderToFormValues(provider)}
 						isLoading={updateMutation.isPending}
 						submitError={updateMutation.error}
+						// Show the organization context as a disabled picker so the
+						// user can see which org they entered from; providers aren't
+						// org-scoped on the wire yet so the value can't be edited.
+						organizations={organizations}
+						selectedOrganizationId={selectedOrganizationId ?? ""}
 						onSubmit={(values) => {
 							const { request, apiKey } = providerFormValuesToUpdate(
 								values,

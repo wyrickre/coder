@@ -1,5 +1,9 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { fn } from "storybook/test";
+import {
+	MockDefaultOrganization,
+	MockOrganization2,
+} from "#/testHelpers/entities";
 import { ProviderForm } from "./ProviderForm";
 
 const meta: Meta<typeof ProviderForm> = {
@@ -9,6 +13,9 @@ const meta: Meta<typeof ProviderForm> = {
 		editing: false,
 		isLoading: false,
 		onSubmit: fn(),
+		organizations: [MockDefaultOrganization, MockOrganization2],
+		selectedOrganizationId: MockDefaultOrganization.id,
+		onOrganizationChange: fn(),
 	},
 };
 
@@ -48,6 +55,7 @@ export const EditBedrockKeepCredentials: Story = {
 	args: {
 		editing: true,
 		bedrockSavedAccessCredentials: true,
+		onOrganizationChange: undefined,
 		initialValues: {
 			type: "bedrock",
 			name: "bedrock",
@@ -65,6 +73,7 @@ export const EditProvider: Story = {
 	args: {
 		editing: true,
 		openAiAnthropicSavedApiKey: true,
+		onOrganizationChange: undefined,
 		initialValues: {
 			type: "anthropic",
 			name: "production-anthropic",
@@ -79,6 +88,7 @@ export const EditOpenAiAnthropicNoSavedKey: Story = {
 	args: {
 		editing: true,
 		openAiAnthropicSavedApiKey: false,
+		onOrganizationChange: undefined,
 		initialValues: {
 			type: "anthropic",
 			name: "production-anthropic",

@@ -12,7 +12,6 @@ import {
 	PageHeaderSubtitle,
 	PageHeaderTitle,
 } from "#/components/PageHeader/PageHeader";
-import { OrganizationPicker } from "../components/OrganizationPicker";
 import { ProviderForm } from "../components/ProviderForm";
 import { providerFormValuesToCreate } from "../components/providerFormApiMap";
 
@@ -86,16 +85,7 @@ const AddProviderPageView: React.FC<AddProviderPageViewProps> = ({
 				</Link>
 			</div>
 			<div className="mx-auto w-full max-w-screen-sm flex flex-col gap-6">
-				<PageHeader
-					className="pt-6 pb-0"
-					actions={
-						<OrganizationPicker
-							organizations={organizations}
-							value={selectedOrganizationId ?? ""}
-							onValueChange={handleSelectOrganization}
-						/>
-					}
-				>
+				<PageHeader className="pt-6 pb-0">
 					<PageHeaderTitle>Add a provider</PageHeaderTitle>
 					<PageHeaderSubtitle>
 						Connect third-party LLM services like OpenAI, Anthropic, or Amazon
@@ -108,6 +98,9 @@ const AddProviderPageView: React.FC<AddProviderPageViewProps> = ({
 						editing={false}
 						isLoading={createMutation.isPending}
 						submitError={createMutation.error}
+						organizations={organizations}
+						selectedOrganizationId={selectedOrganizationId ?? ""}
+						onOrganizationChange={handleSelectOrganization}
 						onSubmit={(values) => {
 							const { request, apiKey } = providerFormValuesToCreate(values);
 							createMutation.mutate(

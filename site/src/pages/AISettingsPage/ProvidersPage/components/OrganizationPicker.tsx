@@ -30,6 +30,13 @@ type OrganizationPickerProps = {
 	disabled?: boolean;
 	/** Optional override of the trigger's `aria-label`. */
 	ariaLabel?: string;
+	/** Optional id for the trigger so a separate `<Label>` can target it. */
+	id?: string;
+	/**
+	 * Override the trigger's width. Defaults to `"w-56 min-w-0"` to match the
+	 * page-header usage; pass `"w-full"` when rendering inside a form column.
+	 */
+	triggerClassName?: string;
 };
 
 /**
@@ -44,6 +51,8 @@ export const OrganizationPicker: FC<OrganizationPickerProps> = ({
 	onValueChange,
 	disabled = false,
 	ariaLabel = "Organization",
+	id,
+	triggerClassName = "w-56 min-w-0",
 }) => {
 	const hasOrganizations = Boolean(organizations?.length);
 	const isDisabled = disabled || !hasOrganizations;
@@ -53,7 +62,11 @@ export const OrganizationPicker: FC<OrganizationPickerProps> = ({
 			onValueChange={onValueChange}
 			disabled={isDisabled}
 		>
-			<SelectTrigger className="w-56 min-w-0" aria-label={ariaLabel}>
+			<SelectTrigger
+				id={id}
+				className={triggerClassName}
+				aria-label={ariaLabel}
+			>
 				<SelectValue placeholder="Select organization" />
 			</SelectTrigger>
 			<SelectContent>
