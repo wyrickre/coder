@@ -3,7 +3,6 @@ import { TrashIcon } from "lucide-react";
 import { type FC, useEffect, useId, useState } from "react";
 import { Link } from "react-router";
 import * as Yup from "yup";
-import type { AIProvider } from "#/api/typesGenerated";
 import { ErrorAlert } from "#/components/Alert/ErrorAlert";
 import { Button } from "#/components/Button/Button";
 import { Form, FormFields } from "#/components/Form/Form";
@@ -166,6 +165,8 @@ const namePlaceholder = (provider: string) => {
 			return "openai";
 		case "anthropic":
 			return "anthropic";
+		case "bedrock":
+			return "bedrock";
 	}
 };
 
@@ -184,6 +185,8 @@ const baseUrlPlaceholder = (provider: string) => {
 			return "https://api.openai.com";
 		case "anthropic":
 			return "https://api.anthropic.com";
+		case "bedrock":
+			return "https://bedrock-runtime.us-east-2.amazonaws.com";
 		default:
 			return;
 	}
@@ -377,6 +380,7 @@ export const ProviderForm: FC<ProviderFormProps> = ({
 							label="Name"
 							description="The name of the provider. This is used to identify the provider in the UI."
 							className="w-full"
+							placeholder={namePlaceholder(form.values.type)}
 						/>
 						<FormField
 							field={getFieldHelpers("baseUrl")}
@@ -391,16 +395,36 @@ export const ProviderForm: FC<ProviderFormProps> = ({
 								</>
 							}
 							className="w-full"
+							placeholder={baseUrlPlaceholder(form.values.type)}
 						/>
 						<FormField
-							field={getFieldHelpers("model")}
+							field={{
+								...getFieldHelpers("model"),
+								helperText: (
+									<>
+										Example:{" "}
+										<code>anthropic.claude-3-5-sonnet-20241022-v2:0</code>
+									</>
+								),
+							}}
 							label="Model"
+							description="The primary Bedrock model ID to use for chat/completions."
 							className="w-full"
+							placeholder="anthropic.claude-3-5-sonnet-20241022-v2:0"
 						/>
 						<FormField
-							field={getFieldHelpers("smallFastModel")}
+							field={{
+								...getFieldHelpers("smallFastModel"),
+								helperText: (
+									<>
+										Example: <code>anthropic.claude-3-haiku-20240307-v1:0</code>
+									</>
+								),
+							}}
 							label="Small fast model"
+							description="A lower-cost, lower-latency model used for lightweight requests such as summaries, titles, routing, or quick responses."
 							className="w-full"
+							placeholder="anthropic.claude-3-haiku-20240307-v1:0"
 						/>
 						<div className="flex flex-col gap-4">
 							<FormField
@@ -408,8 +432,8 @@ export const ProviderForm: FC<ProviderFormProps> = ({
 								label="Access key"
 								description={
 									editing && !bedrockKeysMasked
-										? "Enter a new access key and secret together."
-										: undefined
+										? "Your AWS Access Key ID used to authenticate requests to Bedrock, enter a new access key and secret together."
+										: "Your AWS Access Key ID used to authenticate requests to Bedrock."
 								}
 								className="w-full"
 								onFocus={bedrockKeysMasked ? clearBedrockKeys : undefined}
@@ -417,6 +441,7 @@ export const ProviderForm: FC<ProviderFormProps> = ({
 							<FormField
 								field={getFieldHelpers("accessKeySecret")}
 								label="Access key secret"
+								description="Your AWS Secret Access Key associated with the access key ID. Stored securely and used for request signing."
 								type="password"
 								className="w-full"
 								autoComplete="new-password"
